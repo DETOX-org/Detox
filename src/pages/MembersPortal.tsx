@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PageContainer, SectionHeader, DossierCard } from '../design-system/primitives';
 import { useTheme } from '../ThemeContext';
-import { KeyRound, ArrowRight, BookOpen, Hammer, GitPullRequest, TrendingUp, CheckCircle, ShieldAlert, User, UserPlus, LogOut, Edit3, Save, Check } from 'lucide-react';
+import { KeyRound, ArrowRight, BookOpen, Hammer, GitPullRequest, TrendingUp, CheckCircle, ShieldAlert, User, UserPlus, LogOut, Edit3, Save, Check, AlertTriangle } from 'lucide-react';
 import { Link } from '../router';
 import { useCms } from '../cms/CmsContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,7 +10,7 @@ export const MembersPortal: React.FC = () => {
   const { mode } = useTheme();
   const isLight = mode === 'light';
   const { projects } = useCms();
-  const { user, profile, role, isAdmin, signIn, signUp, signOut, updateProfile } = useAuth();
+  const { user, profile, role, isAdmin, isConfigured, signIn, signUp, signOut, updateProfile } = useAuth();
 
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -267,6 +267,24 @@ export const MembersPortal: React.FC = () => {
                   REGISTER ACCOUNT
                 </button>
               </div>
+
+              {!isConfigured && (
+                <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-amber-400">
+                    <AlertTriangle size={15} />
+                    <span>SUPABASE CREDENTIALS REQUIRED</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-300 leading-normal">
+                    The backend connection key (<code className="font-mono text-amber-300 font-bold">VITE_SUPABASE_ANON_KEY</code>) is not yet set in the environment.
+                  </p>
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-zinc-800 text-[10px] space-y-1 font-mono text-zinc-400">
+                    <div>1. Open <a href="https://supabase.com/dashboard/project/hesflcaaupmphtorfqij/settings/api" target="_blank" rel="noreferrer" className="text-amber-400 underline">Supabase API Settings</a></div>
+                    <div>2. Copy the <strong>anon public</strong> key</div>
+                    <div>3. Add to Vercel (<code className="text-zinc-200">Settings &gt; Environment Variables</code>) or <code className="text-zinc-200">.env.local</code></div>
+                    <div>4. Redeploy to activate live authentication</div>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleAuthSubmit} className="space-y-4">
                 {authMode === 'signup' && (
