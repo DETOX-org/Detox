@@ -14,54 +14,18 @@ import type {
 
 export const DEFAULT_ROLES: UserRole[] = [
   {
-    id: 'super_admin',
+    id: 'superadmin',
     name: 'Super Admin',
     description: 'Unrestricted system authority. Manages roles, members, site settings, and all publishing pipelines.',
     permissions: ['*'],
     isSystem: true,
   },
   {
-    id: 'events_admin',
-    name: 'Events Admin',
-    description: 'Author and manage workshops, paper salons, hackathons, and physical lab bench allocations.',
-    permissions: [
-      'events.create',
-      'events.edit',
-      'events.publish',
-      'events.delete',
-      'media.upload',
-      'media.delete',
-      'media.view',
-    ],
-    isSystem: false,
-  },
-  {
-    id: 'projects_admin',
-    name: 'Projects Admin',
-    description: 'Curate open-source repositories, review student project submissions, and update engineering specs.',
-    permissions: [
-      'projects.create',
-      'projects.edit',
-      'projects.publish',
-      'projects.delete',
-      'media.upload',
-      'media.delete',
-      'media.view',
-    ],
-    isSystem: false,
-  },
-  {
-    id: 'community_admin',
-    name: 'Community Admin',
-    description: 'Manage community activity logs, announcements, and working group coordination.',
-    permissions: [
-      'community.create',
-      'community.publish',
-      'announcements.publish',
-      'media.upload',
-      'media.view',
-    ],
-    isSystem: false,
+    id: 'admin',
+    name: 'Admin',
+    description: 'Engineering and content management authority. Manages projects, events, media, and collage layout.',
+    permissions: ['admin.*'],
+    isSystem: true,
   },
   {
     id: 'member',
@@ -77,56 +41,7 @@ export const DEFAULT_ROLES: UserRole[] = [
   },
 ];
 
-export const DEFAULT_USERS: UserAccount[] = [
-  {
-    id: 'usr_root',
-    name: 'Root Operator',
-    email: 'root@detox.build',
-    roleId: 'super_admin',
-    status: 'ACTIVE',
-    bio: 'Core infrastructure maintainer and lab systems supervisor.',
-    skills: ['x86_64 ASM', 'C11', 'eBPF', 'KiCad'],
-    projectCount: 6,
-    joinedDate: '2025-01-10',
-    avatarInitials: 'RO',
-  },
-  {
-    id: 'usr_sneha',
-    name: 'Sneha T.',
-    email: 'sneha.t@detox.build',
-    roleId: 'events_admin',
-    status: 'ACTIVE',
-    bio: 'Hardware Lead and organizer of weekend SMD solder bring-ups.',
-    skills: ['KiCad PCB', 'STM32', 'RF Trace Layout', 'Stereo Inspection'],
-    projectCount: 3,
-    joinedDate: '2025-02-14',
-    avatarInitials: 'ST',
-  },
-  {
-    id: 'usr_dev',
-    name: 'Dev P.',
-    email: 'dev.p@detox.build',
-    roleId: 'projects_admin',
-    status: 'ACTIVE',
-    bio: 'Systems working group co-lead and detox-os kernel author.',
-    skills: ['Kernel IPC', 'Lock-Free Queues', 'LLVM IR', 'GDB'],
-    projectCount: 4,
-    joinedDate: '2025-01-15',
-    avatarInitials: 'DP',
-  },
-  {
-    id: 'usr_arjun',
-    name: 'Arjun M.',
-    email: 'arjun.m@detox.build',
-    roleId: 'member',
-    status: 'ACTIVE',
-    bio: 'Undergraduate systems builder exploring deterministic compiler passes.',
-    skills: ['Rust', 'C11', 'Linux Kernel Modules', 'CMake'],
-    projectCount: 2,
-    joinedDate: '2025-03-01',
-    avatarInitials: 'AM',
-  },
-];
+export const DEFAULT_USERS: UserAccount[] = [];
 
 export const DEFAULT_MEDIA: MediaItem[] = [
   {

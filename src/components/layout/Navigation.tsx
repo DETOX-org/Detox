@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Menu, X, Sun, Moon, KeyRound, ShieldAlert, UserCheck, ChevronDown } from 'lucide-react';
 import { useTheme } from '../../ThemeContext';
 import { useRouter, Link, type RoutePath } from '../../router';
-import { useCms } from '../../cms/CmsContext';
+import { useAuth } from '../../context/AuthContext';
+import { LogOut, User as UserIcon } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -23,8 +24,14 @@ export const Navigation: React.FC = () => {
   const [sessionMenuOpen, setSessionMenuOpen] = useState(false);
   const { mode, toggleMode } = useTheme();
   const isLight = mode === 'light';
-  const { path } = useRouter();
-  const { currentUser, currentRole, users, switchUser } = useCms();
+  const { path, navigate } = useRouter();
+  const { user, profile, role, isAdmin, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setSessionMenuOpen(false);
+    navigate('/');
+  };
 
   return (
     <header className="fixed top-4 left-0 right-0 z-50 px-3 sm:px-6 pointer-events-none">
@@ -77,74 +84,90 @@ export const Navigation: React.FC = () => {
           })}
         </nav>
 
-        {/* Right Tools: Session Switcher + Members Portal + Admin Gateway + Theme */}
+        {/* Right Tools: Real Auth Pill + Members Portal + Admin Gateway + Theme */}
         <div className="flex items-center gap-2">
-          {/* Interactive Role / Session Switcher */}
+          {/* Authenticated User Pill / Session Dropdown */}
           <div className="relative">
-            <button
-              onClick={() => setSessionMenuOpen(!sessionMenuOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all border ${
-                currentUser
-                  ? 'bg-[#235347]/15 text-[#235347] border-[#235347]/40'
-                  : 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20'
-              }`}
-              title="Switch active user role for testing"
-            >
-              <UserCheck size={12} className={currentUser ? 'text-[#235347]' : 'text-zinc-500'} />
-              <span className="hidden sm:inline">
-                {currentUser ? `${currentUser.name.split(' ')[0]} (${currentRole?.name || 'Member'})` : 'Visitor'}
-              </span>
-              <ChevronDown size={11} />
-            </button>
+            {user && profile ? (
+              <button
+                onClick={() => setSessionMenuOpen(!sessionMenuOpen)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all border ${
+                  role === 'superadmin'
+                    ? 'bg-[#235347] text-white border-[#235347]'
+                    : role === 'admin'
+                    ? 'bg-[#235347]/20 text-[#235347] dark:text-[#99CDD8] border-[#235347]/50'
+                    : 'bg-[#235347]/10 text-[#235347] dark:text-[#99CDD8] border-[#235347]/30'
+                }`}
+                title="Authenticated Member Session"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-semibold">{profile.name.split(' ')[0]}</span>
+                <span className="text-[10px] opacity-80 hidden sm:inline">
+                  ({role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Member'})
+                </span>
+                <ChevronDown size={11} />
+              </button>
+            ) : (
+              <Link
+                to="/members"
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all border ${
+                  isLight
+                    ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-300'
+                    : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+                }`}
+                title="Sign in to Members Portal"
+              >
+                <UserCheck size={12} className="text-zinc-400" />
+                <span>Visitor / Sign In</span>
+              </Link>
+            )}
 
-            {/* Session Switcher Dropdown */}
-            {sessionMenuOpen && (
+            {/* Authenticated Dropdown Menu */}
+            {sessionMenuOpen && user && profile && (
               <div
-                className={`absolute right-0 mt-2 w-56 p-2 rounded-2xl border shadow-2xl z-50 text-xs ${
+                className={`absolute right-0 mt-2 w-64 p-3 rounded-2xl border shadow-2xl z-50 text-xs font-mono ${
                   isLight ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-[#181a20] border-zinc-800 text-zinc-100'
                 }`}
               >
-                <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-2 py-1 border-b border-inherit mb-1">
-                  Switch Role / Session:
+                <div className="pb-2 mb-2 border-b border-inherit">
+                  <div className="font-bold text-xs font-sans truncate">{profile.name}</div>
+                  <div className="text-[10px] text-zinc-500 truncate">{profile.email}</div>
+                  <div className="mt-1">
+                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#235347]/15 text-[#235347] dark:text-[#99CDD8] font-bold">
+                      CLEARANCE: {role?.toUpperCase() || 'MEMBER'}
+                    </span>
+                  </div>
                 </div>
-                <button
-                  onClick={() => {
-                    switchUser(null);
-                    setSessionMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                    !currentUser ? 'bg-[#235347] text-white font-semibold' : 'hover:bg-zinc-500/10'
-                  }`}
-                >
-                  <span>Public Visitor</span>
-                  <span className="text-[10px] opacity-70">View only</span>
-                </button>
-                {users.map((u) => {
-                  const isSelected = currentUser?.id === u.id;
-                  return (
-                    <button
-                      key={u.id}
-                      onClick={() => {
-                        switchUser(u);
-                        setSessionMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                        isSelected ? 'bg-[#235347] text-white font-semibold' : 'hover:bg-zinc-500/10'
-                      }`}
+
+                <div className="space-y-1">
+                  <Link
+                    to="/members"
+                    onClick={() => setSessionMenuOpen(false)}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 hover:bg-zinc-500/10 transition-colors"
+                  >
+                    <UserIcon size={12} />
+                    <span>Member Profile & Bench</span>
+                  </Link>
+
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setSessionMenuOpen(false)}
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 hover:bg-zinc-500/10 transition-colors text-[#235347] dark:text-[#99CDD8] font-bold"
                     >
-                      <span>{u.name}</span>
-                      <span className="text-[10px] opacity-70">
-                        {u.roleId === 'super_admin'
-                          ? 'Super Admin'
-                          : u.roleId === 'events_admin'
-                          ? 'Events Admin'
-                          : u.roleId === 'projects_admin'
-                          ? 'Projects Admin'
-                          : 'Member'}
-                      </span>
-                    </button>
-                  );
-                })}
+                      <ShieldAlert size={12} />
+                      <span>Admin Control Room</span>
+                    </Link>
+                  )}
+
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 text-red-500 hover:bg-red-500/10 transition-colors mt-1 pt-1.5 border-t border-inherit"
+                  >
+                    <LogOut size={12} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -165,21 +188,23 @@ export const Navigation: React.FC = () => {
             <span>Members</span>
           </Link>
 
-          {/* Admin Command Center Link */}
-          <Link
-            to="/admin"
-            className={`hidden sm:flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold tracking-wide transition-all border ${
-              path === '/admin'
-                ? 'bg-[#235347] text-white border-[#235347]'
-                : isLight
-                ? 'bg-zinc-100 text-zinc-700 border-zinc-300 hover:bg-zinc-900 hover:text-white'
-                : 'bg-zinc-900 text-zinc-300 border-zinc-700 hover:bg-white hover:text-zinc-950'
-            }`}
-            title="Admin & CMS Control Room"
-          >
-            <ShieldAlert size={12} />
-            <span>Admin</span>
-          </Link>
+          {/* Admin Command Center Link (Protected) */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`hidden sm:flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold tracking-wide transition-all border ${
+                path === '/admin'
+                  ? 'bg-[#235347] text-white border-[#235347]'
+                  : isLight
+                  ? 'bg-zinc-100 text-zinc-700 border-zinc-300 hover:bg-zinc-900 hover:text-white'
+                  : 'bg-zinc-900 text-zinc-300 border-zinc-700 hover:bg-white hover:text-zinc-950'
+              }`}
+              title="Admin & CMS Control Room"
+            >
+              <ShieldAlert size={12} />
+              <span>Admin</span>
+            </Link>
+          )}
 
           {/* Mode Switcher Button */}
           <button
@@ -252,14 +277,16 @@ export const Navigation: React.FC = () => {
                 <KeyRound size={13} />
                 <span>Members Portal</span>
               </Link>
-              <Link
-                to="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-zinc-800 text-zinc-100 font-semibold rounded-xl text-xs"
-              >
-                <ShieldAlert size={13} />
-                <span>Admin</span>
-              </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-zinc-800 text-zinc-100 font-semibold rounded-xl text-xs"
+                >
+                  <ShieldAlert size={13} />
+                  <span>Admin</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

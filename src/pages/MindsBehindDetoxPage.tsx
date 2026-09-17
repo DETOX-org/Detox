@@ -10,7 +10,7 @@ export const MindsBehindDetoxPage: React.FC = () => {
   const { mode } = useTheme();
   const isLight = mode === 'light';
   const { people, collageSettings } = useCms();
-  const [selectedRole, setSelectedRole] = useState<string>('ALL');
+  const [selectedDiscipline, setSelectedDiscipline] = useState<string>('ALL');
 
   // Filter published and visible people and sort by order
   const publishedPeople = people
@@ -18,11 +18,11 @@ export const MindsBehindDetoxPage: React.FC = () => {
     .sort((a, b) => (a.order || 99) - (b.order || 99));
 
   const filteredPeople =
-    selectedRole === 'ALL'
+    selectedDiscipline === 'ALL'
       ? publishedPeople
-      : publishedPeople.filter((p) => p.roleArea.toUpperCase() === selectedRole.toUpperCase());
+      : publishedPeople.filter((p) => p.roleArea.toUpperCase() === selectedDiscipline.toUpperCase());
 
-  const roleFilterOptions = [
+  const disciplineFilterOptions = [
     { label: 'All Minds', value: 'ALL', color: '#235347' },
     { label: 'Technical & Systems', value: 'Technical', color: '#38B2A2' },
     { label: 'Hardware & Silicon', value: 'Projects', color: '#F3C3B2' },
@@ -46,7 +46,7 @@ export const MindsBehindDetoxPage: React.FC = () => {
       />
 
       {/* Role Filter Pills & Interaction Cue */}
-      <div className="mb-12">
+      <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-4 mb-6">
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
             <Compass size={14} className="text-[#235347]" />
@@ -60,12 +60,12 @@ export const MindsBehindDetoxPage: React.FC = () => {
 
         {/* Filter Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          {roleFilterOptions.map((opt) => {
-            const isSelected = selectedRole === opt.value;
+          {disciplineFilterOptions.map((opt) => {
+            const isSelected = selectedDiscipline === opt.value;
             return (
               <button
                 key={opt.value}
-                onClick={() => setSelectedRole(opt.value)}
+                onClick={() => setSelectedDiscipline(opt.value)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
                   isSelected
                     ? 'text-white shadow-xs'

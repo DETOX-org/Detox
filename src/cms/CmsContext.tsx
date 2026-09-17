@@ -28,6 +28,8 @@ import {
   DEFAULT_COLLAGE_SETTINGS,
   DEFAULT_AUDIT_LOGS,
 } from './seedData';
+import { supabase, isSupabaseConfigured, type DbProfile } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 interface CmsContextValue {
   // Entities
@@ -42,67 +44,247 @@ interface CmsContextValue {
   settings: SiteSettings;
   collageSettings: CollageStageSettings;
   auditLogs: AuditLogEntry[];
+  isLoadingData: boolean;
+  isBackendConnected: boolean;
 
-  // Current session & auth
+  // Current session & auth (authoritative Supabase user and role)
   currentUser: UserAccount | null;
   currentRole: UserRole | null;
-  switchUser: (user: UserAccount | null) => void;
   hasPermission: (permission: string) => boolean;
 
   // Mutations - Collage Art Direction
-  updateCollageSettings: (updates: Partial<CollageStageSettings>) => void;
-  publishCollageChanges: (peopleData: PersonItem[], settingsData?: Partial<CollageStageSettings>) => void;
+  updateCollageSettings: (updates: Partial<CollageStageSettings>) => Promise<void>;
+  publishCollageChanges: (peopleData: PersonItem[], settingsData?: Partial<CollageStageSettings>) => Promise<void>;
 
   // Mutations - Projects
-  addProject: (project: Omit<ProjectItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateProject: (id: string, updates: Partial<ProjectItem>) => void;
-  deleteProject: (id: string) => void;
-  setProjectStatus: (id: string, status: ContentStatus) => void;
+  addProject: (project: Omit<ProjectItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateProject: (id: string, updates: Partial<ProjectItem>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  setProjectStatus: (id: string, status: ContentStatus) => Promise<void>;
 
   // Mutations - Events
-  addEvent: (event: Omit<EventItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateEvent: (id: string, updates: Partial<EventItem>) => void;
-  deleteEvent: (id: string) => void;
-  setEventStatus: (id: string, status: ContentStatus) => void;
+  addEvent: (event: Omit<EventItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateEvent: (id: string, updates: Partial<EventItem>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
+  setEventStatus: (id: string, status: ContentStatus) => Promise<void>;
 
   // Mutations - Media
-  addMedia: (media: Omit<MediaItem, 'id' | 'uploadedAt' | 'uploadedBy'>) => void;
-  deleteMedia: (id: string) => void;
+  addMedia: (media: Omit<MediaItem, 'id' | 'uploadedAt' | 'uploadedBy'>) => Promise<void>;
+  deleteMedia: (id: string) => Promise<void>;
 
   // Mutations - People
-  addPerson: (person: Omit<PersonItem, 'id'>) => void;
-  updatePerson: (id: string, updates: Partial<PersonItem>) => void;
-  deletePerson: (id: string) => void;
-  setPersonStatus: (id: string, status: ContentStatus) => void;
-  reorderPeople: (reordered: PersonItem[]) => void;
+  addPerson: (person: Omit<PersonItem, 'id'>) => Promise<void>;
+  updatePerson: (id: string, updates: Partial<PersonItem>) => Promise<void>;
+  deletePerson: (id: string) => Promise<void>;
+  setPersonStatus: (id: string, status: ContentStatus) => Promise<void>;
+  reorderPeople: (reordered: PersonItem[]) => Promise<void>;
 
   // Mutations - Accomplishments
-  addAccomplishment: (item: Omit<AccomplishmentItem, 'id'>) => void;
-  updateAccomplishment: (id: string, updates: Partial<AccomplishmentItem>) => void;
-  deleteAccomplishment: (id: string) => void;
+  addAccomplishment: (item: Omit<AccomplishmentItem, 'id'>) => Promise<void>;
+  updateAccomplishment: (id: string, updates: Partial<AccomplishmentItem>) => Promise<void>;
+  deleteAccomplishment: (id: string) => Promise<void>;
 
   // Mutations - Announcements
-  addAnnouncement: (item: Omit<AnnouncementItem, 'id'>) => void;
-  updateAnnouncement: (id: string, updates: Partial<AnnouncementItem>) => void;
-  deleteAnnouncement: (id: string) => void;
+  addAnnouncement: (item: Omit<AnnouncementItem, 'id'>) => Promise<void>;
+  updateAnnouncement: (id: string, updates: Partial<AnnouncementItem>) => Promise<void>;
+  deleteAnnouncement: (id: string) => Promise<void>;
 
-  // Mutations - Members & Access
-  updateUserRole: (userId: string, roleId: string) => void;
-  updateUserStatus: (userId: string, status: 'ACTIVE' | 'PENDING' | 'SUSPENDED') => void;
-  updateRolePermissions: (roleId: string, permissions: string[]) => void;
+  // Mutations - Members & Access (Super Admin)
+  updateUserRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string }>;
+  updateUserStatus: (userId: string, status: 'ACTIVE' | 'PENDING' | 'SUSPENDED') => Promise<{ success: boolean; error?: string }>;
+  refreshMembers: () => Promise<void>;
 
   // Mutations - System
   updateSettings: (updates: Partial<SiteSettings>) => void;
+  syncSeedToSupabase: () => Promise<{ success: boolean; message: string }>;
   resetToSeedData: () => void;
 }
 
 const CmsContext = createContext<CmsContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'detox_cms_v2_store';
+// Field Mappers: DB (snake_case) <-> Frontend (camelCase)
+function mapDbPerson(row: any): PersonItem {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug || row.id,
+    roleArea: row.role_area,
+    focusTag: row.focus_tag || '',
+    oneSentence: row.one_sentence || '',
+    biography: row.biography || '',
+    areaOfContribution: row.area_of_contribution || '',
+    activeProject: row.active_project || '',
+    contributedProjectIds: row.contributed_project_ids || [],
+    participatedEventIds: row.participated_event_ids || [],
+    githubUrl: row.github_url || '',
+    email: row.email || '',
+    socialLinks: row.social_links || {},
+    photoUrl: row.photo_url || row.cutout_url,
+    photoLabel: row.photo_label || row.name,
+    photoCaption: row.photo_caption || '',
+    cutoutUrl: row.cutout_url || row.photo_url,
+    originalPhotoUrl: row.original_photo_url || row.cutout_url,
+    stagePosition: row.stage_position || { x: 50, y: 10 },
+    stageScale: row.stage_scale ?? 1.0,
+    stageRotation: row.stage_rotation ?? 0,
+    stageZIndex: row.stage_z_index ?? 10,
+    isForegroundAnchor: Boolean(row.is_foreground_anchor),
+    cutoutContour: row.cutout_contour || 'natural',
+    collageSize: row.collage_size || 'md',
+    aspectRatio: row.aspect_ratio || 'portrait',
+    paletteAccent: row.palette_accent || '#38B2A2',
+    tagVariant: row.tag_variant || 'teal',
+    status: row.status || 'PUBLISHED',
+    order: row.display_order ?? 0,
+  };
+}
+
+function mapPersonToDb(p: Partial<PersonItem>): any {
+  const row: any = {};
+  if (p.id !== undefined) row.id = p.id;
+  if (p.name !== undefined) row.name = p.name;
+  if (p.slug !== undefined) row.slug = p.slug;
+  if (p.roleArea !== undefined) row.role_area = p.roleArea;
+  if (p.focusTag !== undefined) row.focus_tag = p.focusTag;
+  if (p.oneSentence !== undefined) row.one_sentence = p.oneSentence;
+  if (p.biography !== undefined) row.biography = p.biography;
+  if (p.areaOfContribution !== undefined) row.area_of_contribution = p.areaOfContribution;
+  if (p.activeProject !== undefined) row.active_project = p.activeProject;
+  if (p.contributedProjectIds !== undefined) row.contributed_project_ids = p.contributedProjectIds;
+  if (p.participatedEventIds !== undefined) row.participated_event_ids = p.participatedEventIds;
+  if (p.githubUrl !== undefined) row.github_url = p.githubUrl;
+  if (p.email !== undefined) row.email = p.email;
+  if (p.socialLinks !== undefined) row.social_links = p.socialLinks;
+  if (p.photoUrl !== undefined) row.photo_url = p.photoUrl;
+  if (p.photoLabel !== undefined) row.photo_label = p.photoLabel;
+  if (p.photoCaption !== undefined) row.photo_caption = p.photoCaption;
+  if (p.cutoutUrl !== undefined) row.cutout_url = p.cutoutUrl;
+  if (p.originalPhotoUrl !== undefined) row.original_photo_url = p.originalPhotoUrl;
+  if (p.stagePosition !== undefined) row.stage_position = p.stagePosition;
+  if (p.stageScale !== undefined) row.stage_scale = p.stageScale;
+  if (p.stageRotation !== undefined) row.stage_rotation = p.stageRotation;
+  if (p.stageZIndex !== undefined) row.stage_z_index = p.stageZIndex;
+  if (p.isForegroundAnchor !== undefined) row.is_foreground_anchor = p.isForegroundAnchor;
+  if (p.cutoutContour !== undefined) row.cutout_contour = p.cutoutContour;
+  if (p.collageSize !== undefined) row.collage_size = p.collageSize;
+  if (p.aspectRatio !== undefined) row.aspect_ratio = p.aspectRatio;
+  if (p.paletteAccent !== undefined) row.palette_accent = p.paletteAccent;
+  if (p.tagVariant !== undefined) row.tag_variant = p.tagVariant;
+  if (p.status !== undefined) row.status = p.status;
+  if (p.order !== undefined) row.display_order = p.order;
+  row.updated_at = new Date().toISOString();
+  return row;
+}
+
+function mapDbProject(row: any): ProjectItem {
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    description: row.description,
+    visualUrl: row.visual_url,
+    visualLabel: row.visual_label || '',
+    visualCaption: row.visual_caption || '',
+    contributors: row.contributors || [],
+    status: row.status || 'DRAFT',
+    gitUrl: row.git_url || '',
+    specs: row.specs || [],
+    metrics: row.metrics || undefined,
+    createdAt: row.created_at ? row.created_at.split('T')[0] : '',
+    updatedAt: row.updated_at ? row.updated_at.split('T')[0] : '',
+  };
+}
+
+function mapProjectToDb(p: Partial<ProjectItem>): any {
+  const row: any = {};
+  if (p.id !== undefined) row.id = p.id;
+  if (p.title !== undefined) row.title = p.title;
+  if (p.category !== undefined) row.category = p.category;
+  if (p.description !== undefined) row.description = p.description;
+  if (p.visualUrl !== undefined) row.visual_url = p.visualUrl;
+  if (p.visualLabel !== undefined) row.visual_label = p.visualLabel;
+  if (p.visualCaption !== undefined) row.visual_caption = p.visualCaption;
+  if (p.contributors !== undefined) row.contributors = p.contributors;
+  if (p.status !== undefined) row.status = p.status;
+  if (p.gitUrl !== undefined) row.git_url = p.gitUrl;
+  if (p.specs !== undefined) row.specs = p.specs;
+  if (p.metrics !== undefined) row.metrics = p.metrics;
+  row.updated_at = new Date().toISOString();
+  return row;
+}
+
+function mapDbEvent(row: any): EventItem {
+  return {
+    id: row.id,
+    code: row.code || '',
+    title: row.title,
+    category: row.category,
+    date: row.date || '',
+    time: row.time || '',
+    location: row.location || '',
+    capacity: row.capacity || '',
+    description: row.description || '',
+    photoUrl: row.photo_url,
+    photoLabel: row.photo_label || '',
+    photoCaption: row.photo_caption || '',
+    deliverables: row.deliverables || [],
+    resources: row.resources || [],
+    status: row.status || 'DRAFT',
+    isUpcoming: Boolean(row.is_upcoming),
+    createdAt: row.created_at ? row.created_at.split('T')[0] : '',
+    updatedAt: row.updated_at ? row.updated_at.split('T')[0] : '',
+  };
+}
+
+function mapEventToDb(e: Partial<EventItem>): any {
+  const row: any = {};
+  if (e.id !== undefined) row.id = e.id;
+  if (e.code !== undefined) row.code = e.code;
+  if (e.title !== undefined) row.title = e.title;
+  if (e.category !== undefined) row.category = e.category;
+  if (e.date !== undefined) row.date = e.date;
+  if (e.time !== undefined) row.time = e.time;
+  if (e.location !== undefined) row.location = e.location;
+  if (e.capacity !== undefined) row.capacity = e.capacity;
+  if (e.description !== undefined) row.description = e.description;
+  if (e.photoUrl !== undefined) row.photo_url = e.photoUrl;
+  if (e.photoLabel !== undefined) row.photo_label = e.photoLabel;
+  if (e.photoCaption !== undefined) row.photo_caption = e.photoCaption;
+  if (e.deliverables !== undefined) row.deliverables = e.deliverables;
+  if (e.resources !== undefined) row.resources = e.resources;
+  if (e.status !== undefined) row.status = e.status;
+  if (e.isUpcoming !== undefined) row.is_upcoming = e.isUpcoming;
+  row.updated_at = new Date().toISOString();
+  return row;
+}
+
+function mapDbProfileToUser(p: DbProfile): UserAccount {
+  const name = p.name || p.email.split('@')[0];
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0].toUpperCase())
+    .join('') || 'U';
+
+  return {
+    id: p.id,
+    userId: p.user_id,
+    name,
+    username: p.username || undefined,
+    email: p.email,
+    avatar: p.avatar || undefined,
+    roleId: p.role,
+    status: p.status,
+    bio: p.bio || undefined,
+    skills: p.skills || [],
+    joinedDate: p.created_at ? p.created_at.split('T')[0] : '2026-01-01',
+    avatarInitials: initials,
+  };
+}
 
 export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load initial state from localStorage or seed
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { user: authUser, profile: authProfile, role: authRole } = useAuth();
 
   const [projects, setProjects] = useState<ProjectItem[]>(DEFAULT_PROJECTS);
   const [events, setEvents] = useState<EventItem[]>(DEFAULT_EVENTS);
@@ -110,150 +292,176 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [people, setPeople] = useState<PersonItem[]>(DEFAULT_PEOPLE);
   const [accomplishments, setAccomplishments] = useState<AccomplishmentItem[]>(DEFAULT_ACCOMPLISHMENTS);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>(DEFAULT_ANNOUNCEMENTS);
-  const [roles, setRoles] = useState<UserRole[]>(DEFAULT_ROLES);
+  const [roles] = useState<UserRole[]>(DEFAULT_ROLES);
   const [users, setUsers] = useState<UserAccount[]>(DEFAULT_USERS);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [collageSettings, setCollageSettings] = useState<CollageStageSettings>(DEFAULT_COLLAGE_SETTINGS);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(DEFAULT_AUDIT_LOGS);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
 
-  // Default active user is Super Admin for easy evaluator testing
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(DEFAULT_USERS[0]);
+  // Derive Current User directly from Supabase Auth & Profile
+  const currentUser = useMemo<UserAccount | null>(() => {
+    if (!authUser || !authProfile) return null;
+    return mapDbProfileToUser(authProfile);
+  }, [authUser, authProfile]);
 
-  // Read saved state on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.projects) setProjects(parsed.projects);
-        if (parsed.events) setEvents(parsed.events);
-        if (parsed.mediaItems) setMediaItems(parsed.mediaItems);
-        if (parsed.collageSettings) setCollageSettings({ ...DEFAULT_COLLAGE_SETTINGS, ...parsed.collageSettings });
-        if (parsed.people && Array.isArray(parsed.people)) {
-          const mergedPeople = parsed.people.map((p: PersonItem) => {
-            const def = DEFAULT_PEOPLE.find(
-              (dp) =>
-                dp.id === p.id ||
-                (dp.slug && p.slug && dp.slug.toLowerCase() === p.slug.toLowerCase()) ||
-                (dp.name && p.name && dp.name.toLowerCase() === p.name.toLowerCase())
-            );
-            if (def) {
-              const rawCutout = typeof p.cutoutUrl === 'string' ? p.cutoutUrl.trim() : '';
-              const isInvalid =
-                !rawCutout ||
-                rawCutout.includes(':\\') ||
-                rawCutout.includes('.gemini') ||
-                rawCutout.includes('brain') ||
-                rawCutout.startsWith('file:');
-              const isCustomUpload =
-                !isInvalid &&
-                (rawCutout.startsWith('data:') ||
-                  rawCutout.startsWith('blob:') ||
-                  rawCutout.startsWith('http://') ||
-                  rawCutout.startsWith('https://') ||
-                  rawCutout.startsWith('/'));
-              const finalCutout = isCustomUpload ? rawCutout : def.cutoutUrl;
-              return {
-                ...def,
-                ...p,
-                cutoutUrl: finalCutout,
-                photoUrl: finalCutout,
-                originalPhotoUrl: p.originalPhotoUrl || def.originalPhotoUrl || finalCutout,
-                stagePosition: p.stagePosition || def.stagePosition,
-                stageScale: p.stageScale || def.stageScale,
-                stageRotation: p.stageRotation ?? def.stageRotation,
-                stageZIndex: p.stageZIndex ?? def.stageZIndex,
-                isForegroundAnchor: p.isForegroundAnchor ?? def.isForegroundAnchor,
-                paletteAccent: p.paletteAccent || def.paletteAccent,
-                status: p.status || def.status,
-              };
-            }
-            // For custom people added in Super Admin
-            const customCutout = p.cutoutUrl || p.photoUrl || '';
-            return {
-              ...p,
-              cutoutUrl: customCutout,
-              photoUrl: customCutout,
-            };
-          });
-
-          // Ensure any missing default seed people are added to the list
-          DEFAULT_PEOPLE.forEach((dp) => {
-            if (
-              !mergedPeople.some(
-                (mp: PersonItem) =>
-                  mp.id === dp.id ||
-                  (mp.slug && dp.slug && mp.slug.toLowerCase() === dp.slug.toLowerCase()) ||
-                  (mp.name && dp.name && mp.name.toLowerCase() === dp.name.toLowerCase())
-              )
-            ) {
-              mergedPeople.push(dp);
-            }
-          });
-
-          setPeople(mergedPeople);
-        }
-        if (parsed.accomplishments) setAccomplishments(parsed.accomplishments);
-        if (parsed.announcements) setAnnouncements(parsed.announcements);
-        if (parsed.roles) setRoles(parsed.roles);
-        if (parsed.users) setUsers(parsed.users);
-        if (parsed.settings) setSettings(parsed.settings);
-        if (parsed.auditLogs) setAuditLogs(parsed.auditLogs);
-        if (parsed.currentUserId !== undefined) {
-          const u = (parsed.users || DEFAULT_USERS).find((usr: UserAccount) => usr.id === parsed.currentUserId);
-          setCurrentUser(u || null);
-        }
+  // Derive Current Role
+  const currentRole = useMemo<UserRole | null>(() => {
+    if (!currentUser) return null;
+    const roleId = currentUser.roleId || authRole || 'member';
+    return (
+      roles.find((r) => r.id === roleId) || {
+        id: roleId,
+        name: roleId === 'superadmin' ? 'Super Admin' : roleId === 'admin' ? 'Admin' : 'Member',
+        description: 'DETOX Authenticated Member',
+        permissions: roleId === 'superadmin' ? ['*'] : roleId === 'admin' ? ['admin.*'] : ['profile.edit'],
+        isSystem: true,
       }
-    } catch (e) {
-      console.warn('Failed to parse CMS storage', e);
+    );
+  }, [currentUser, authRole, roles]);
+
+  // Fetch live collections from Supabase on mount
+  const fetchAllData = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setIsLoadingData(false);
+      return;
+    }
+
+    try {
+      const [
+        projRes,
+        evtRes,
+        peopleRes,
+        mediaRes,
+        accRes,
+        annRes,
+        colRes,
+        audRes,
+      ] = await Promise.all([
+        supabase.from('projects').select('*').order('created_at', { ascending: false }),
+        supabase.from('events').select('*').order('date', { ascending: true }),
+        supabase.from('people').select('*').order('display_order', { ascending: true }),
+        supabase.from('media').select('*').order('created_at', { ascending: false }),
+        supabase.from('accomplishments').select('*').order('date', { ascending: false }),
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }),
+        supabase.from('collage_settings').select('*').eq('id', 'global').maybeSingle(),
+        supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(50),
+      ]);
+
+      if (projRes.data && projRes.data.length > 0) {
+        setProjects(projRes.data.map(mapDbProject));
+      }
+      if (evtRes.data && evtRes.data.length > 0) {
+        setEvents(evtRes.data.map(mapDbEvent));
+      }
+      if (peopleRes.data && peopleRes.data.length > 0) {
+        setPeople(peopleRes.data.map(mapDbPerson));
+      }
+      if (mediaRes.data && mediaRes.data.length > 0) {
+        setMediaItems(
+          mediaRes.data.map((m: any) => ({
+            id: m.id,
+            name: m.name,
+            url: m.url,
+            category: m.category,
+            tags: m.tags || [],
+            size: m.size || '',
+            dimensions: m.dimensions || '',
+            uploadedBy: m.uploaded_by || '',
+            uploadedAt: m.created_at ? m.created_at.split('T')[0] : '',
+            caption: m.caption || '',
+          }))
+        );
+      }
+      if (accRes.data && accRes.data.length > 0) {
+        setAccomplishments(
+          accRes.data.map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            date: a.date,
+            category: a.category,
+            description: a.description || '',
+            impact: a.impact || '',
+            verifiedLink: a.verified_link || '',
+            status: a.status || 'PUBLISHED',
+          }))
+        );
+      }
+      if (annRes.data && annRes.data.length > 0) {
+        setAnnouncements(
+          annRes.data.map((an: any) => ({
+            id: an.id,
+            title: an.title,
+            content: an.content,
+            type: an.type,
+            date: an.date,
+            active: Boolean(an.active),
+            status: an.status || 'PUBLISHED',
+          }))
+        );
+      }
+      if (colRes.data) {
+        setCollageSettings((prev) => ({
+          ...prev,
+          title: colRes.data.title || prev.title,
+          categoryTag: colRes.data.category_tag || prev.categoryTag,
+          leadText: colRes.data.lead_text || prev.leadText,
+          statusText: colRes.data.status_text || prev.statusText,
+          bgType: colRes.data.bg_type || prev.bgType,
+          bgColor: colRes.data.bg_color || prev.bgColor,
+          pattern: colRes.data.pattern || prev.pattern,
+          hoverBehavior: colRes.data.hover_behavior || prev.hoverBehavior,
+          decorativeElements: colRes.data.decorative_elements || prev.decorativeElements,
+        }));
+      }
+      if (audRes.data && audRes.data.length > 0) {
+        setAuditLogs(
+          audRes.data.map((l: any) => ({
+            id: l.id,
+            timestamp: l.timestamp ? l.timestamp.replace('T', ' ').substring(0, 19) : '',
+            actorId: l.actor_id || '',
+            actorName: l.actor_name || '',
+            actorRole: l.actor_role || '',
+            action: l.action,
+            targetType: l.target_type,
+            targetId: l.target_id,
+            details: l.details || '',
+          }))
+        );
+      }
+    } catch (err) {
+      console.warn('Error fetching data from Supabase, maintaining seed state:', err);
     } finally {
-      setIsLoaded(true);
+      setIsLoadingData(false);
     }
   }, []);
 
-  // Save on updates once loaded
-  useEffect(() => {
-    if (!isLoaded) return;
+  // Fetch all profiles for Super Admin / Admin
+  const refreshMembers = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
     try {
-      const payload = {
-        projects,
-        events,
-        mediaItems,
-        people,
-        accomplishments,
-        announcements,
-        roles,
-        users,
-        settings,
-        collageSettings,
-        auditLogs,
-        currentUserId: currentUser ? currentUser.id : null,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    } catch (e) {
-      console.warn('Failed to persist CMS storage', e);
-    }
-  }, [
-    isLoaded,
-    projects,
-    events,
-    mediaItems,
-    people,
-    accomplishments,
-    announcements,
-    roles,
-    users,
-    settings,
-    collageSettings,
-    auditLogs,
-    currentUser,
-  ]);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  // Current role lookup
-  const currentRole = useMemo(() => {
-    if (!currentUser) return null;
-    return roles.find((r) => r.id === currentUser.roleId) || null;
-  }, [currentUser, roles]);
+      if (!error && data) {
+        setUsers(data.map((p: any) => mapDbProfileToUser(p as DbProfile)));
+      }
+    } catch (e) {
+      console.warn('Failed to load member profiles:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  useEffect(() => {
+    if (authRole === 'admin' || authRole === 'superadmin') {
+      refreshMembers();
+    }
+  }, [authRole, refreshMembers]);
 
   // Granular permissions check
   const hasPermission = useCallback(
@@ -261,18 +469,17 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!currentUser || !currentRole) return false;
       if (currentRole.permissions.includes('*')) return true;
       if (currentRole.permissions.includes(permission)) return true;
-      if (currentUser.customPermissions?.includes(permission)) return true;
       return false;
     },
     [currentUser, currentRole]
   );
 
-  // Audit logger
+  // Audit Logger with Supabase persistence
   const logAudit = useCallback(
-    (action: AuditAction, targetType: AuditTargetType, targetId: string, details: string) => {
-      const newEntry: AuditLogEntry = {
-        id: `aud_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-        timestamp: new Date().toISOString().replace('T', ' ').substr(0, 19),
+    async (action: AuditAction, targetType: AuditTargetType, targetId: string, details: string) => {
+      const entry: AuditLogEntry = {
+        id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
         actorId: currentUser ? currentUser.id : 'anon',
         actorName: currentUser ? currentUser.name : 'Public Visitor',
         actorRole: currentRole ? currentRole.name : 'Public',
@@ -281,126 +488,272 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         targetId,
         details,
       };
-      setAuditLogs((prev) => [newEntry, ...prev]);
+
+      setAuditLogs((prev) => [entry, ...prev]);
+
+      if (isSupabaseConfigured) {
+        try {
+          await supabase.from('audit_logs').insert({
+            id: entry.id,
+            actor_id: entry.actorId,
+            actor_name: entry.actorName,
+            actor_role: entry.actorRole,
+            action,
+            target_type: targetType,
+            target_id: targetId,
+            details,
+          });
+        } catch (err) {
+          console.warn('Failed to persist audit log to Supabase:', err);
+        }
+      }
     },
     [currentUser, currentRole]
   );
 
-  // Switch session user
-  const switchUser = useCallback((user: UserAccount | null) => {
-    setCurrentUser(user);
-  }, []);
-
-  // Project Mutations
+  // Mutations: Projects
   const addProject = useCallback(
-    (item: Omit<ProjectItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+    async (item: Omit<ProjectItem, 'id' | 'createdAt' | 'updatedAt'>) => {
       const now = new Date().toISOString().split('T')[0];
       const id = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `proj-${Date.now()}`;
-      const newProject: ProjectItem = {
-        ...item,
-        id,
-        createdAt: now,
-        updatedAt: now,
-      };
-      setProjects((prev) => [newProject, ...prev]);
-      logAudit('CREATE', 'PROJECT', id, `Created project "${item.title}" [Status: ${item.status}]`);
+      const newProj: ProjectItem = { ...item, id, createdAt: now, updatedAt: now };
+
+      setProjects((prev) => [newProj, ...prev]);
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('projects').insert(mapProjectToDb(newProj));
+        if (error) console.error('Supabase error inserting project:', error);
+      }
+
+      await logAudit('CREATE', 'PROJECT', id, `Created project "${item.title}"`);
     },
     [logAudit]
   );
 
   const updateProject = useCallback(
-    (id: string, updates: Partial<ProjectItem>) => {
+    async (id: string, updates: Partial<ProjectItem>) => {
       const now = new Date().toISOString().split('T')[0];
-      setProjects((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, ...updates, updatedAt: now } : p))
-      );
-      logAudit('UPDATE', 'PROJECT', id, `Updated project specifications for ${id}`);
+      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates, updatedAt: now } : p)));
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('projects').update(mapProjectToDb(updates)).eq('id', id);
+        if (error) console.error('Supabase error updating project:', error);
+      }
+
+      await logAudit('UPDATE', 'PROJECT', id, `Updated project specifications for ${id}`);
     },
     [logAudit]
   );
 
   const deleteProject = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const target = projects.find((p) => p.id === id);
       setProjects((prev) => prev.filter((p) => p.id !== id));
-      logAudit('DELETE', 'PROJECT', id, `Deleted project "${target?.title || id}"`);
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('projects').delete().eq('id', id);
+        if (error) console.error('Supabase error deleting project:', error);
+      }
+
+      await logAudit('DELETE', 'PROJECT', id, `Deleted project "${target?.title || id}"`);
     },
     [projects, logAudit]
   );
 
   const setProjectStatus = useCallback(
-    (id: string, status: ContentStatus) => {
-      const now = new Date().toISOString().split('T')[0];
-      setProjects((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, status, updatedAt: now } : p))
-      );
-      logAudit(
-        status === 'PUBLISHED' ? 'PUBLISH' : 'REVIEW',
-        'PROJECT',
-        id,
-        `Transitioned project ${id} to ${status}`
-      );
+    async (id: string, status: ContentStatus) => {
+      await updateProject(id, { status });
     },
-    [logAudit]
+    [updateProject]
   );
 
-  // Event Mutations
+  // Mutations: Events
   const addEvent = useCallback(
-    (item: Omit<EventItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+    async (item: Omit<EventItem, 'id' | 'createdAt' | 'updatedAt'>) => {
       const now = new Date().toISOString().split('T')[0];
       const id = `evt-${Date.now()}`;
-      const newEvent: EventItem = {
-        ...item,
-        id,
-        createdAt: now,
-        updatedAt: now,
-      };
+      const newEvent: EventItem = { ...item, id, createdAt: now, updatedAt: now };
+
       setEvents((prev) => [newEvent, ...prev]);
-      logAudit('CREATE', 'EVENT', id, `Created event "${item.title}" [Status: ${item.status}]`);
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('events').insert(mapEventToDb(newEvent));
+        if (error) console.error('Supabase error inserting event:', error);
+      }
+
+      await logAudit('CREATE', 'EVENT', id, `Created event "${item.title}"`);
     },
     [logAudit]
   );
 
   const updateEvent = useCallback(
-    (id: string, updates: Partial<EventItem>) => {
+    async (id: string, updates: Partial<EventItem>) => {
       const now = new Date().toISOString().split('T')[0];
-      setEvents((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, ...updates, updatedAt: now } : e))
-      );
-      logAudit('UPDATE', 'EVENT', id, `Updated event ${id}`);
+      setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...updates, updatedAt: now } : e)));
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('events').update(mapEventToDb(updates)).eq('id', id);
+        if (error) console.error('Supabase error updating event:', error);
+      }
+
+      await logAudit('UPDATE', 'EVENT', id, `Updated event ${id}`);
     },
     [logAudit]
   );
 
   const deleteEvent = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const target = events.find((e) => e.id === id);
       setEvents((prev) => prev.filter((e) => e.id !== id));
-      logAudit('DELETE', 'EVENT', id, `Deleted event "${target?.title || id}"`);
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('events').delete().eq('id', id);
+        if (error) console.error('Supabase error deleting event:', error);
+      }
+
+      await logAudit('DELETE', 'EVENT', id, `Deleted event "${target?.title || id}"`);
     },
     [events, logAudit]
   );
 
   const setEventStatus = useCallback(
-    (id: string, status: ContentStatus) => {
-      const now = new Date().toISOString().split('T')[0];
-      setEvents((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, status, updatedAt: now } : e))
-      );
-      logAudit(
-        status === 'PUBLISHED' ? 'PUBLISH' : 'REVIEW',
-        'EVENT',
-        id,
-        `Transitioned event ${id} to ${status}`
-      );
+    async (id: string, status: ContentStatus) => {
+      await updateEvent(id, { status });
+    },
+    [updateEvent]
+  );
+
+  // Mutations: People
+  const addPerson = useCallback(
+    async (person: Omit<PersonItem, 'id'>) => {
+      const id = `per_${Date.now()}`;
+      const newPerson: PersonItem = { ...person, id };
+
+      setPeople((prev) => [...prev, newPerson]);
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('people').insert(mapPersonToDb(newPerson));
+        if (error) console.error('Supabase error inserting person:', error);
+      }
+
+      await logAudit('CREATE', 'PERSON', id, `Added builder "${person.name}"`);
     },
     [logAudit]
   );
 
-  // Media Mutations
+  const updatePerson = useCallback(
+    async (id: string, updates: Partial<PersonItem>) => {
+      setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('people').update(mapPersonToDb(updates)).eq('id', id);
+        if (error) console.error('Supabase error updating person:', error);
+      }
+
+      await logAudit('UPDATE', 'PERSON', id, `Updated profile for builder ${id}`);
+    },
+    [logAudit]
+  );
+
+  const deletePerson = useCallback(
+    async (id: string) => {
+      const target = people.find((p) => p.id === id);
+      setPeople((prev) => prev.filter((p) => p.id !== id));
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('people').delete().eq('id', id);
+        if (error) console.error('Supabase error deleting person:', error);
+      }
+
+      await logAudit('DELETE', 'PERSON', id, `Removed builder profile "${target?.name || id}"`);
+    },
+    [people, logAudit]
+  );
+
+  const setPersonStatus = useCallback(
+    async (id: string, status: ContentStatus) => {
+      await updatePerson(id, { status });
+    },
+    [updatePerson]
+  );
+
+  const reorderPeople = useCallback(
+    async (reordered: PersonItem[]) => {
+      const withUpdatedOrders = reordered.map((p, idx) => ({ ...p, order: idx + 1 }));
+      setPeople(withUpdatedOrders);
+
+      if (isSupabaseConfigured) {
+        try {
+          await Promise.all(
+            withUpdatedOrders.map((p) =>
+              supabase.from('people').update({ display_order: p.order }).eq('id', p.id)
+            )
+          );
+        } catch (e) {
+          console.error('Error saving people reorder:', e);
+        }
+      }
+
+      await logAudit('UPDATE', 'PERSON', 'ALL', 'Reordered Minds Behind DETOX collage layout');
+    },
+    [logAudit]
+  );
+
+  // Mutations: Collage Stage Settings
+  const updateCollageSettings = useCallback(
+    async (updates: Partial<CollageStageSettings>) => {
+      setCollageSettings((prev) => ({ ...prev, ...updates }));
+
+      if (isSupabaseConfigured) {
+        const dbUpdates: any = { updated_at: new Date().toISOString() };
+        if (updates.title !== undefined) dbUpdates.title = updates.title;
+        if (updates.categoryTag !== undefined) dbUpdates.category_tag = updates.categoryTag;
+        if (updates.leadText !== undefined) dbUpdates.lead_text = updates.leadText;
+        if (updates.statusText !== undefined) dbUpdates.status_text = updates.statusText;
+        if (updates.bgType !== undefined) dbUpdates.bg_type = updates.bgType;
+        if (updates.bgColor !== undefined) dbUpdates.bg_color = updates.bgColor;
+        if (updates.pattern !== undefined) dbUpdates.pattern = updates.pattern;
+        if (updates.hoverBehavior !== undefined) dbUpdates.hover_behavior = updates.hoverBehavior;
+        if (updates.decorativeElements !== undefined) dbUpdates.decorative_elements = updates.decorativeElements;
+
+        await supabase.from('collage_settings').upsert({ id: 'global', ...dbUpdates });
+      }
+
+      await logAudit('SETTINGS', 'SETTING', 'collage', 'Updated Minds Behind DETOX collage stage settings');
+    },
+    [logAudit]
+  );
+
+  const publishCollageChanges = useCallback(
+    async (peopleData: PersonItem[], settingsData?: Partial<CollageStageSettings>) => {
+      setPeople(peopleData);
+      if (settingsData) {
+        setCollageSettings((prev) => ({ ...prev, ...settingsData }));
+      }
+
+      if (isSupabaseConfigured) {
+        try {
+          await Promise.all(
+            peopleData.map((p) => supabase.from('people').upsert(mapPersonToDb(p)))
+          );
+
+          if (settingsData) {
+            await updateCollageSettings(settingsData);
+          }
+        } catch (err) {
+          console.error('Error saving collage visual arrangements to Supabase:', err);
+        }
+      }
+
+      await logAudit('PUBLISH', 'PERSON', 'ALL', 'Published visual collage arrangement and art direction');
+    },
+    [logAudit, updateCollageSettings]
+  );
+
+  // Mutations: Media
   const addMedia = useCallback(
-    (item: Omit<MediaItem, 'id' | 'uploadedAt' | 'uploadedBy'>) => {
-      const now = new Date().toISOString().replace('T', ' ').substr(0, 16);
+    async (item: Omit<MediaItem, 'id' | 'uploadedAt' | 'uploadedBy'>) => {
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
       const id = `med_${Date.now()}`;
       const newMedia: MediaItem = {
         ...item,
@@ -408,195 +761,275 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         uploadedAt: now,
         uploadedBy: currentUser ? currentUser.email : 'admin@detox.build',
       };
+
       setMediaItems((prev) => [newMedia, ...prev]);
-      logAudit('CREATE', 'MEDIA', id, `Uploaded "${item.name}" to category ${item.category}`);
+
+      if (isSupabaseConfigured) {
+        await supabase.from('media').insert({
+          id,
+          name: item.name,
+          url: item.url || '',
+          category: item.category,
+          tags: item.tags || [],
+          size: item.size || '',
+          dimensions: item.dimensions || '',
+          uploaded_by: newMedia.uploadedBy,
+          caption: item.caption || '',
+        });
+      }
+
+      await logAudit('CREATE', 'MEDIA', id, `Uploaded media asset "${item.name}"`);
     },
     [currentUser, logAudit]
   );
 
   const deleteMedia = useCallback(
-    (id: string) => {
-      const target = mediaItems.find((m) => m.id === id);
+    async (id: string) => {
       setMediaItems((prev) => prev.filter((m) => m.id !== id));
-      logAudit('DELETE', 'MEDIA', id, `Deleted media asset "${target?.name || id}"`);
-    },
-    [mediaItems, logAudit]
-  );
 
-  // People Mutations
-  const addPerson = useCallback(
-    (person: Omit<PersonItem, 'id'>) => {
-      const id = `per_${Date.now()}`;
-      const newPerson: PersonItem = { ...person, id };
-      setPeople((prev) => [...prev, newPerson]);
-      logAudit('CREATE', 'PERSON', id, `Added builder "${person.name}" in ${person.roleArea}`);
+      if (isSupabaseConfigured) {
+        await supabase.from('media').delete().eq('id', id);
+      }
+
+      await logAudit('DELETE', 'MEDIA', id, `Deleted media asset ${id}`);
     },
     [logAudit]
   );
 
-  const updatePerson = useCallback(
-    (id: string, updates: Partial<PersonItem>) => {
-      setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
-      logAudit('UPDATE', 'PERSON', id, `Updated profile for builder ${id}`);
-    },
-    [logAudit]
-  );
-
-  const deletePerson = useCallback(
-    (id: string) => {
-      const target = people.find((p) => p.id === id);
-      setPeople((prev) => prev.filter((p) => p.id !== id));
-      logAudit('DELETE', 'PERSON', id, `Removed builder profile "${target?.name || id}"`);
-    },
-    [people, logAudit]
-  );
-
-  const setPersonStatus = useCallback(
-    (id: string, status: ContentStatus) => {
-      setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
-      logAudit('UPDATE', 'PERSON', id, `Set status for builder ${id} to ${status}`);
-    },
-    [logAudit]
-  );
-
-  const reorderPeople = useCallback(
-    (reordered: PersonItem[]) => {
-      const withUpdatedOrders = reordered.map((p, idx) => ({ ...p, order: idx + 1 }));
-      setPeople(withUpdatedOrders);
-      logAudit('UPDATE', 'PERSON', 'ALL', 'Reordered Minds Behind DETOX collage layout');
-    },
-    [logAudit]
-  );
-
-  // Accomplishments
+  // Mutations: Accomplishments
   const addAccomplishment = useCallback(
-    (item: Omit<AccomplishmentItem, 'id'>) => {
+    async (item: Omit<AccomplishmentItem, 'id'>) => {
       const id = `acc_${Date.now()}`;
-      setAccomplishments((prev) => [{ ...item, id }, ...prev]);
-      logAudit('CREATE', 'ACCOMPLISHMENT', id, `Added accomplishment "${item.title}"`);
+      const newItem: AccomplishmentItem = { ...item, id };
+      setAccomplishments((prev) => [newItem, ...prev]);
+
+      if (isSupabaseConfigured) {
+        await supabase.from('accomplishments').insert({
+          id,
+          title: item.title,
+          date: item.date,
+          category: item.category,
+          description: item.description,
+          impact: item.impact,
+          verified_link: item.verifiedLink,
+          status: item.status,
+        });
+      }
+
+      await logAudit('CREATE', 'ACCOMPLISHMENT', id, `Added accomplishment "${item.title}"`);
     },
     [logAudit]
   );
 
   const updateAccomplishment = useCallback(
-    (id: string, updates: Partial<AccomplishmentItem>) => {
-      setAccomplishments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
-      );
-      logAudit('UPDATE', 'ACCOMPLISHMENT', id, `Updated accomplishment ${id}`);
+    async (id: string, updates: Partial<AccomplishmentItem>) => {
+      setAccomplishments((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
+
+      if (isSupabaseConfigured) {
+        const dbUpdates: any = {};
+        if (updates.title !== undefined) dbUpdates.title = updates.title;
+        if (updates.date !== undefined) dbUpdates.date = updates.date;
+        if (updates.category !== undefined) dbUpdates.category = updates.category;
+        if (updates.description !== undefined) dbUpdates.description = updates.description;
+        if (updates.impact !== undefined) dbUpdates.impact = updates.impact;
+        if (updates.verifiedLink !== undefined) dbUpdates.verified_link = updates.verifiedLink;
+        if (updates.status !== undefined) dbUpdates.status = updates.status;
+        await supabase.from('accomplishments').update(dbUpdates).eq('id', id);
+      }
+
+      await logAudit('UPDATE', 'ACCOMPLISHMENT', id, `Updated accomplishment ${id}`);
     },
     [logAudit]
   );
 
   const deleteAccomplishment = useCallback(
-    (id: string) => {
+    async (id: string) => {
       setAccomplishments((prev) => prev.filter((a) => a.id !== id));
-      logAudit('DELETE', 'ACCOMPLISHMENT', id, `Deleted accomplishment ${id}`);
+
+      if (isSupabaseConfigured) {
+        await supabase.from('accomplishments').delete().eq('id', id);
+      }
+
+      await logAudit('DELETE', 'ACCOMPLISHMENT', id, `Deleted accomplishment ${id}`);
     },
     [logAudit]
   );
 
-  // Announcements
+  // Mutations: Announcements
   const addAnnouncement = useCallback(
-    (item: Omit<AnnouncementItem, 'id'>) => {
+    async (item: Omit<AnnouncementItem, 'id'>) => {
       const id = `ann_${Date.now()}`;
-      setAnnouncements((prev) => [{ ...item, id }, ...prev]);
-      logAudit('CREATE', 'ANNOUNCEMENT', id, `Published announcement "${item.title}"`);
+      const newItem: AnnouncementItem = { ...item, id };
+      setAnnouncements((prev) => [newItem, ...prev]);
+
+      if (isSupabaseConfigured) {
+        await supabase.from('announcements').insert({
+          id,
+          title: item.title,
+          content: item.content,
+          type: item.type,
+          date: item.date,
+          active: item.active,
+          status: item.status,
+        });
+      }
+
+      await logAudit('CREATE', 'ANNOUNCEMENT', id, `Published announcement "${item.title}"`);
     },
     [logAudit]
   );
 
   const updateAnnouncement = useCallback(
-    (id: string, updates: Partial<AnnouncementItem>) => {
-      setAnnouncements((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
-      );
-      logAudit('UPDATE', 'ANNOUNCEMENT', id, `Updated announcement ${id}`);
+    async (id: string, updates: Partial<AnnouncementItem>) => {
+      setAnnouncements((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
+
+      if (isSupabaseConfigured) {
+        const dbUpdates: any = {};
+        if (updates.title !== undefined) dbUpdates.title = updates.title;
+        if (updates.content !== undefined) dbUpdates.content = updates.content;
+        if (updates.type !== undefined) dbUpdates.type = updates.type;
+        if (updates.date !== undefined) dbUpdates.date = updates.date;
+        if (updates.active !== undefined) dbUpdates.active = updates.active;
+        if (updates.status !== undefined) dbUpdates.status = updates.status;
+        await supabase.from('announcements').update(dbUpdates).eq('id', id);
+      }
+
+      await logAudit('UPDATE', 'ANNOUNCEMENT', id, `Updated announcement ${id}`);
     },
     [logAudit]
   );
 
   const deleteAnnouncement = useCallback(
-    (id: string) => {
+    async (id: string) => {
       setAnnouncements((prev) => prev.filter((a) => a.id !== id));
-      logAudit('DELETE', 'ANNOUNCEMENT', id, `Deleted announcement ${id}`);
+
+      if (isSupabaseConfigured) {
+        await supabase.from('announcements').delete().eq('id', id);
+      }
+
+      await logAudit('DELETE', 'ANNOUNCEMENT', id, `Deleted announcement ${id}`);
     },
     [logAudit]
   );
 
-  // Member management
+  // Mutations: Members & Roles (Super Admin Only)
   const updateUserRole = useCallback(
-    (userId: string, roleId: string) => {
-      const role = roles.find((r) => r.id === roleId);
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, roleId } : u))
-      );
-      logAudit('ROLE_CHANGE', 'MEMBER', userId, `Changed role for member ${userId} to ${role?.name || roleId}`);
+    async (userId: string, roleId: string): Promise<{ success: boolean; error?: string }> => {
+      if (!isSupabaseConfigured) {
+        setUsers((prev) => prev.map((u) => (u.id === userId || u.userId === userId ? { ...u, roleId } : u)));
+        return { success: true };
+      }
+
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: roleId })
+          .or(`id.eq.${userId},user_id.eq.${userId}`);
+
+        if (error) {
+          console.error('Supabase RLS/Trigger blocked role update:', error);
+          return { success: false, error: error.message };
+        }
+
+        await refreshMembers();
+        await logAudit('ROLE_CHANGE', 'MEMBER', userId, `Changed role for member ${userId} to ${roleId}`);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Role change failed' };
+      }
     },
-    [roles, logAudit]
+    [logAudit, refreshMembers]
   );
 
   const updateUserStatus = useCallback(
-    (userId: string, status: 'ACTIVE' | 'PENDING' | 'SUSPENDED') => {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, status } : u))
-      );
-      logAudit('UPDATE', 'MEMBER', userId, `Set member ${userId} status to ${status}`);
-    },
-    [logAudit]
-  );
-
-  const updateRolePermissions = useCallback(
-    (roleId: string, permissions: string[]) => {
-      setRoles((prev) =>
-        prev.map((r) => (r.id === roleId ? { ...r, permissions } : r))
-      );
-      logAudit('SETTINGS', 'SETTING', roleId, `Updated permission grants for role ${roleId}`);
-    },
-    [logAudit]
-  );
-
-  const updateSettings = useCallback(
-    (updates: Partial<SiteSettings>) => {
-      setSettings((prev) => ({ ...prev, ...updates }));
-      logAudit('SETTINGS', 'SETTING', 'global', `Updated site configuration`);
-    },
-    [logAudit]
-  );
-
-  const updateCollageSettings = useCallback(
-    (updates: Partial<CollageStageSettings>) => {
-      setCollageSettings((prev) => ({ ...prev, ...updates }));
-      logAudit('SETTINGS', 'SETTING', 'collage', `Updated Minds Behind DETOX collage stage settings`);
-    },
-    [logAudit]
-  );
-
-  const publishCollageChanges = useCallback(
-    (peopleData: PersonItem[], settingsData?: Partial<CollageStageSettings>) => {
-      setPeople(peopleData);
-      if (settingsData) {
-        setCollageSettings((prev) => ({ ...prev, ...settingsData }));
+    async (userId: string, status: 'ACTIVE' | 'PENDING' | 'SUSPENDED'): Promise<{ success: boolean; error?: string }> => {
+      if (!isSupabaseConfigured) {
+        setUsers((prev) => prev.map((u) => (u.id === userId || u.userId === userId ? { ...u, status } : u)));
+        return { success: true };
       }
-      logAudit('PUBLISH', 'PERSON', 'ALL', 'Published visual collage arrangement and art direction');
+
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ status })
+          .or(`id.eq.${userId},user_id.eq.${userId}`);
+
+        if (error) {
+          return { success: false, error: error.message };
+        }
+
+        await refreshMembers();
+        await logAudit('UPDATE', 'MEMBER', userId, `Set member ${userId} status to ${status}`);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Status change failed' };
+      }
     },
-    [logAudit]
+    [logAudit, refreshMembers]
   );
+
+  const updateSettings = useCallback((updates: Partial<SiteSettings>) => {
+    setSettings((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const syncSeedToSupabase = useCallback(async (): Promise<{ success: boolean; message: string }> => {
+    if (!isSupabaseConfigured) {
+      return { success: false, message: 'Supabase credentials not configured yet.' };
+    }
+
+    try {
+      for (const p of DEFAULT_PROJECTS) {
+        await supabase.from('projects').upsert(mapProjectToDb(p));
+      }
+      for (const e of DEFAULT_EVENTS) {
+        await supabase.from('events').upsert(mapEventToDb(e));
+      }
+      for (const pers of DEFAULT_PEOPLE) {
+        await supabase.from('people').upsert(mapPersonToDb(pers));
+      }
+      await updateCollageSettings(DEFAULT_COLLAGE_SETTINGS);
+      for (const a of DEFAULT_ACCOMPLISHMENTS) {
+        await supabase.from('accomplishments').upsert({
+          id: a.id,
+          title: a.title,
+          date: a.date,
+          category: a.category,
+          description: a.description,
+          impact: a.impact,
+          verified_link: a.verifiedLink,
+          status: a.status,
+        });
+      }
+      for (const an of DEFAULT_ANNOUNCEMENTS) {
+        await supabase.from('announcements').upsert({
+          id: an.id,
+          title: an.title,
+          content: an.content,
+          type: an.type,
+          date: an.date,
+          active: an.active,
+          status: an.status,
+        });
+      }
+
+      await fetchAllData();
+      return { success: true, message: 'All verified default seed data successfully synced to Supabase database.' };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'Sync failed.' };
+    }
+  }, [fetchAllData, updateCollageSettings]);
 
   const resetToSeedData = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
     setProjects(DEFAULT_PROJECTS);
     setEvents(DEFAULT_EVENTS);
     setMediaItems(DEFAULT_MEDIA);
     setPeople(DEFAULT_PEOPLE);
     setAccomplishments(DEFAULT_ACCOMPLISHMENTS);
     setAnnouncements(DEFAULT_ANNOUNCEMENTS);
-    setRoles(DEFAULT_ROLES);
     setUsers(DEFAULT_USERS);
     setSettings(DEFAULT_SETTINGS);
     setCollageSettings(DEFAULT_COLLAGE_SETTINGS);
     setAuditLogs(DEFAULT_AUDIT_LOGS);
-    setCurrentUser(DEFAULT_USERS[0]);
   }, []);
 
   return (
@@ -613,9 +1046,10 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         settings,
         collageSettings,
         auditLogs,
+        isLoadingData,
+        isBackendConnected: isSupabaseConfigured,
         currentUser,
         currentRole,
-        switchUser,
         hasPermission,
         addProject,
         updateProject,
@@ -640,10 +1074,11 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteAnnouncement,
         updateUserRole,
         updateUserStatus,
-        updateRolePermissions,
+        refreshMembers,
         updateSettings,
         updateCollageSettings,
         publishCollageChanges,
+        syncSeedToSupabase,
         resetToSeedData,
       }}
     >

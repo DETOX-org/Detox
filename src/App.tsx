@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import { RouterProvider, useRouter } from './router';
+import { AuthProvider } from './context/AuthContext';
 import { CmsProvider } from './cms/CmsContext';
 import { Navigation } from './components/layout/Navigation';
 import { Footer } from './components/layout/Footer';
@@ -82,13 +83,16 @@ function AppContent() {
 export function App() {
   return (
     <ThemeProvider>
-      <CmsProvider>
-        <RouterProvider>
-          <AppContent />
-        </RouterProvider>
-      </CmsProvider>
+      <AuthProvider>
+        <CmsProvider>
+          <RouterProvider>
+            <AppContent />
+          </RouterProvider>
+        </CmsProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
 
 export default App;
+

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCms } from '../../cms/CmsContext';
+import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../ThemeContext';
 import { Link } from '../../router';
 import type {
@@ -32,12 +33,18 @@ import {
   Sliders,
   Sparkles,
   Eye,
+  Lock,
+  AlertTriangle,
+  Search,
+  Database,
 } from 'lucide-react';
 
 type AdminTab = 'OVERVIEW' | 'PEOPLE' | 'CONTENT' | 'MEDIA' | 'MEMBERS' | 'ACCESS' | 'SYSTEM';
 type ContentSubTab = 'PROJECTS' | 'EVENTS' | 'PEOPLE' | 'ACCOMPLISHMENTS' | 'ANNOUNCEMENTS';
 
 export const AdminDashboard: React.FC = () => {
+  const { user, profile, isAdmin, isSuperAdmin, isLoading: isAuthLoading } = useAuth();
+
   const {
     projects,
     events,
@@ -47,8 +54,6 @@ export const AdminDashboard: React.FC = () => {
     announcements,
     roles,
     users,
-    currentUser,
-    currentRole,
     settings,
     auditLogs,
     addProject,
@@ -69,7 +74,10 @@ export const AdminDashboard: React.FC = () => {
     addAnnouncement,
     deleteAnnouncement,
     updateUserRole,
+    updateUserStatus,
+    refreshMembers,
     updateSettings,
+    syncSeedToSupabase,
     resetToSeedData,
     publishCollageChanges,
   } = useCms();
@@ -81,6 +89,21 @@ export const AdminDashboard: React.FC = () => {
   const [contentSubTab, setContentSubTab] = useState<ContentSubTab>('PROJECTS');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [peopleViewMode, setPeopleViewMode] = useState<'stage' | 'table'>('stage');
+
+  // Member Management state
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    type: 'role' | 'status';
+    userId: string;
+    userName: string;
+    targetValue: string;
+  } | null>(null);
+  const [syncStatus, setSyncStatus] = useState<{ loading: boolean; message: string | null; error: boolean }>({
+    loading: false,
+    message: null,
+    error: false,
+  });
 
   // Modals
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -542,6 +565,68 @@ export const AdminDashboard: React.FC = () => {
   const totalPublishedEvents = events.filter((e) => e.status === 'PUBLISHED').length;
   const totalDraftEvents = events.filter((e) => e.status !== 'PUBLISHED').length;
 
+  if (isAuthLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center font-mono ${isLight ? 'bg-[#f4f1ea] text-zinc-800' : 'bg-[#0d0e11] text-zinc-200'}`}>
+        <div className="flex items-center gap-3">
+          <RefreshCw className="animate-spin text-[#235347]" size={20} />
+          <span className="text-xs uppercase tracking-wider">Verifying Security Clearance...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className={`min-h-screen font-mono flex items-center justify-center p-6 ${isLight ? 'bg-[#f4f1ea] text-zinc-900' : 'bg-[#0d0e11] text-zinc-100'}`}>
+        <div className={`max-w-md w-full p-8 rounded-2xl border shadow-xl space-y-6 ${isLight ? 'bg-[#faf8f5] border-zinc-300' : 'bg-[#14161a] border-zinc-800'}`}>
+          <div className="flex items-center gap-3 border-b border-red-500/20 pb-4">
+            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
+              <Lock size={20} />
+            </div>
+            <div>
+              <div className="font-bold text-red-500 text-sm">// CLEARANCE REQUIRED</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">DETOX Control Room Security</div>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-xs leading-relaxed text-zinc-400">
+            <p>
+              Access to this administrative workspace is strictly restricted to verified <strong className="text-zinc-200">Admin</strong> and <strong className="text-zinc-200">Super Admin</strong> accounts.
+            </p>
+            {user ? (
+              <div className="p-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 text-yellow-300 text-[11px] space-y-1">
+                <div className="font-bold">Signed in as: {profile?.name || user?.email}</div>
+                <div className="text-zinc-400">Current clearance level: <span className="font-mono text-zinc-200 font-bold uppercase">{profile?.role || 'MEMBER'}</span></div>
+                <div className="text-[10px] text-zinc-500 mt-1">If you require elevated administrative clearance, ask an existing Super Admin or run the PostgreSQL bootstrap procedure in Supabase.</div>
+              </div>
+            ) : (
+              <p className="text-zinc-400">
+                You are currently unauthenticated. Please sign in with an authorized administrator account in the Members Portal.
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Link
+              to="/members"
+              className="flex-1 py-2.5 px-4 bg-[#163B32] hover:bg-[#235347] text-white rounded-xl font-bold text-center text-xs transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span>Go to Members Portal</span>
+              <ArrowRight size={13} />
+            </Link>
+            <Link
+              to="/"
+              className="py-2.5 px-4 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-zinc-300 font-bold text-center text-xs transition-colors"
+            >
+              Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`min-h-screen font-mono text-xs transition-colors duration-300 ${
@@ -567,38 +652,61 @@ export const AdminDashboard: React.FC = () => {
             <div className="hidden sm:flex items-center gap-2 text-[10px]">
               <span className="w-2 h-2 rounded-full bg-[#235347] animate-pulse" />
               <span className="text-zinc-500">OPERATING AS:</span>
-              <span className="font-bold text-[#235347]">{currentUser?.name || 'VISITOR'}</span>
+              <span className="font-bold text-[#235347]">{profile?.name || user?.email?.split('@')[0] || 'ADMIN'}</span>
               <span
                 className={`px-1.5 py-0.5 rounded-2xs text-[9px] font-bold ${
-                  currentRole?.id === 'super_admin'
+                  isSuperAdmin
                     ? 'bg-[#235347] text-white'
                     : 'bg-zinc-800 text-zinc-300'
                 }`}
               >
-                {currentRole?.name.toUpperCase() || 'PUBLIC'}
+                {isSuperAdmin ? 'SUPER ADMIN' : isAdmin ? 'ADMIN' : 'MEMBER'}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-[11px]">
+          <div className="flex items-center gap-2 sm:gap-3 text-[11px]">
+            <button
+              onClick={async () => {
+                if (window.confirm('Sync default verified seed data (projects, events, cutouts, stage settings) to Supabase tables?')) {
+                  setSyncStatus({ loading: true, message: 'Syncing seed records...', error: false });
+                  const res = await syncSeedToSupabase();
+                  setSyncStatus({ loading: false, message: res.message, error: !res.success });
+                  setTimeout(() => setSyncStatus({ loading: false, message: null, error: false }), 4000);
+                }
+              }}
+              disabled={syncStatus.loading}
+              className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 flex items-center gap-1 px-2.5 py-1 rounded-xs border border-zinc-300 dark:border-zinc-800"
+              title="Sync initial seed data into Supabase database"
+            >
+              <Database size={11} className={syncStatus.loading ? 'animate-spin' : ''} />
+              <span className="hidden md:inline">{syncStatus.loading ? 'Syncing...' : 'Sync Seed to DB'}</span>
+            </button>
+
+            {syncStatus.message && (
+              <span className={`text-[10px] px-2 py-0.5 rounded ${syncStatus.error ? 'text-red-400 bg-red-950/50' : 'text-emerald-400 bg-emerald-950/50'}`}>
+                {syncStatus.message}
+              </span>
+            )}
+
             <button
               onClick={() => {
-                if (window.confirm('Reset all CMS data to default verified seed data?')) {
+                if (window.confirm('Reset all CMS data in memory to default verified seed data?')) {
                   resetToSeedData();
                 }
               }}
               className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 flex items-center gap-1 px-2 py-1 rounded-xs border border-zinc-300 dark:border-zinc-800"
-              title="Reset all CMS collections to authentic default seed records"
+              title="Reset in-memory state to authentic default seed records"
             >
               <RefreshCw size={11} />
-              <span className="hidden md:inline">Reset Seed</span>
+              <span className="hidden lg:inline">Reset State</span>
             </button>
 
             <Link
               to="/"
               className="flex items-center gap-1 px-3 py-1.5 bg-[#163B32] hover:bg-[#235347] text-white rounded-xs font-semibold tracking-wider transition-colors"
             >
-              <span>VIEW PUBLIC SITE</span>
+              <span>PUBLIC SITE</span>
               <ArrowRight size={11} />
             </Link>
           </div>
@@ -1300,17 +1408,54 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 4: MEMBERS */}
         {activeTab === 'MEMBERS' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
               <div>
-                <div className="font-bold text-[#235347] text-sm">// MEMBER ACCOUNTS ({users.length})</div>
-                <div className="text-[10px] text-zinc-500">
-                  Student builders with laboratory access keycards
+                <div className="font-bold text-[#235347] text-sm flex items-center gap-2">
+                  <span>// MEMBER DIRECTORY & ACCESS CONTROL</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#235347]/15 text-[#235347] dark:text-[#99CDD8] font-sans font-semibold">
+                    {users.length} {users.length === 1 ? 'Account' : 'Accounts'}
+                  </span>
                 </div>
+                <div className="text-[10px] text-zinc-500">
+                  Registered members, role assignments, and laboratory security statuses.
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Search Box */}
+                <div className="relative">
+                  <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                  <input
+                    type="text"
+                    value={memberSearchQuery}
+                    onChange={(e) => setMemberSearchQuery(e.target.value)}
+                    placeholder="Search name, email, role..."
+                    className="pl-7 pr-3 py-1.5 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:border-[#235347]"
+                  />
+                </div>
+
+                <button
+                  onClick={() => refreshMembers()}
+                  className="px-3 py-1.5 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800 flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 transition-colors"
+                  title="Reload member profiles from Supabase database"
+                >
+                  <RefreshCw size={12} />
+                  <span>Refresh</span>
+                </button>
               </div>
             </div>
 
+            {!isSuperAdmin && (
+              <div className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-300 text-xs flex items-center gap-2.5">
+                <Shield size={16} className="text-blue-400 shrink-0" />
+                <span>
+                  <strong>Admin View Mode:</strong> You can inspect member accounts. Modification of security roles and account suspension requires <strong>Super Admin</strong> clearance.
+                </span>
+              </div>
+            )}
+
             <div
-              className={`border rounded-xs overflow-hidden ${
+              className={`border rounded-xl overflow-hidden shadow-xs ${
                 isLight ? 'bg-[#faf8f5] border-zinc-300' : 'bg-[#14161a] border-zinc-800'
               }`}
             >
@@ -1321,55 +1466,141 @@ export const AdminDashboard: React.FC = () => {
                   }`}
                 >
                   <tr>
-                    <th className="p-3">MEMBER / EMAIL</th>
-                    <th className="p-3">ASSIGNED ROLE</th>
-                    <th className="p-3">STATUS</th>
-                    <th className="p-3">JOINED DATE</th>
-                    <th className="p-3 text-right">PROMOTE / ROLE</th>
+                    <th className="p-3">MEMBER IDENTITY</th>
+                    <th className="p-3">EMAIL</th>
+                    <th className="p-3">ROLE CLEARANCE</th>
+                    <th className="p-3">ACCOUNT STATUS</th>
+                    <th className="p-3">JOINED</th>
+                    <th className="p-3 text-right">ADMIN ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-700/40">
-                  {users.map((u) => {
-                    const r = roles.find((role) => role.id === u.roleId);
-                    return (
-                      <tr key={u.id} className="hover:bg-zinc-500/5">
-                        <td className="p-3">
-                          <div className="font-bold font-sans">{u.name}</div>
-                          <div className="text-zinc-500 text-[10px]">{u.email}</div>
-                        </td>
-                        <td className="p-3">
-                          <span
-                            className={`px-2 py-0.5 rounded-2xs text-[9px] font-bold ${
-                              u.roleId === 'super_admin'
-                                ? 'bg-[#235347] text-white'
-                                : 'bg-zinc-800 text-zinc-300'
-                            }`}
-                          >
-                            {r?.name || u.roleId}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <span className="text-zinc-400 font-bold">{u.status}</span>
-                        </td>
-                        <td className="p-3 text-zinc-500">{u.joinedDate}</td>
-                        <td className="p-3 text-right">
-                          <select
-                            value={u.roleId}
-                            onChange={(e) => updateUserRole(u.id, e.target.value)}
-                            className="bg-zinc-800 text-zinc-200 p-1 rounded-xs border border-zinc-700 text-[10px]"
-                          >
-                            {roles.map((role) => (
-                              <option key={role.id} value={role.id}>
-                                Set: {role.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {users
+                    .filter((u) => {
+                      if (!memberSearchQuery.trim()) return true;
+                      const q = memberSearchQuery.toLowerCase();
+                      return (
+                        u.name.toLowerCase().includes(q) ||
+                        u.email.toLowerCase().includes(q) ||
+                        u.roleId.toLowerCase().includes(q) ||
+                        u.status.toLowerCase().includes(q) ||
+                        (u.username && u.username.toLowerCase().includes(q))
+                      );
+                    })
+                    .map((u) => {
+                      const isCurrentUser = user?.id === u.userId || user?.id === u.id;
+                      const roleDisplay = u.roleId === 'superadmin' || u.roleId === 'super_admin' ? 'SUPER ADMIN' : u.roleId === 'admin' ? 'ADMIN' : 'MEMBER';
+                      const statusColor =
+                        u.status === 'ACTIVE'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                          : u.status === 'SUSPENDED'
+                          ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                          : 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
+
+                      return (
+                        <tr key={u.id} className="hover:bg-zinc-500/5 transition-colors">
+                          <td className="p-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full bg-[#235347]/20 border border-[#235347]/40 flex items-center justify-center text-[11px] font-bold text-[#235347] dark:text-[#99CDD8]">
+                                {u.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="font-bold font-sans flex items-center gap-1.5">
+                                  <span>{u.name}</span>
+                                  {isCurrentUser && (
+                                    <span className="text-[8px] px-1.5 py-0.2 rounded bg-zinc-700 text-zinc-300 font-mono">
+                                      YOU
+                                    </span>
+                                  )}
+                                </div>
+                                {u.username && (
+                                  <div className="text-zinc-500 text-[9px] font-mono">@{u.username}</div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3 text-zinc-400 font-mono text-[10px]">{u.email}</td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-0.5 rounded-md border text-[9px] font-bold tracking-wider ${
+                                u.roleId === 'superadmin' || u.roleId === 'super_admin'
+                                  ? 'bg-[#235347]/20 text-[#235347] dark:text-[#99CDD8] border-[#235347]/40'
+                                  : u.roleId === 'admin'
+                                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
+                                  : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                              }`}
+                            >
+                              {roleDisplay}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-md border text-[9px] font-bold ${statusColor}`}>
+                              {u.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-zinc-500 text-[10px]">{u.joinedDate}</td>
+                          <td className="p-3 text-right">
+                            {isSuperAdmin ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                {/* Role Selector */}
+                                <select
+                                  value={u.roleId}
+                                  onChange={(e) => {
+                                    const nextRole = e.target.value;
+                                    if (nextRole !== u.roleId) {
+                                      setConfirmModal({
+                                        isOpen: true,
+                                        type: 'role',
+                                        userId: u.id,
+                                        userName: u.name,
+                                        targetValue: nextRole,
+                                      });
+                                    }
+                                  }}
+                                  className="bg-zinc-800 text-zinc-200 py-1 px-2 rounded border border-zinc-700 text-[10px] focus:outline-hidden focus:border-[#235347]"
+                                >
+                                  <option value="member">Set: Member</option>
+                                  <option value="admin">Set: Admin</option>
+                                  <option value="superadmin">Set: Super Admin</option>
+                                </select>
+
+                                {/* Status Selector */}
+                                <select
+                                  value={u.status}
+                                  onChange={(e) => {
+                                    const nextStatus = e.target.value;
+                                    if (nextStatus !== u.status) {
+                                      setConfirmModal({
+                                        isOpen: true,
+                                        type: 'status',
+                                        userId: u.id,
+                                        userName: u.name,
+                                        targetValue: nextStatus,
+                                      });
+                                    }
+                                  }}
+                                  className="bg-zinc-800 text-zinc-200 py-1 px-2 rounded border border-zinc-700 text-[10px] focus:outline-hidden focus:border-[#235347]"
+                                >
+                                  <option value="ACTIVE">ACTIVE</option>
+                                  <option value="PENDING">PENDING</option>
+                                  <option value="SUSPENDED">SUSPENDED</option>
+                                </select>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-zinc-500 italic">Read-Only</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
+
+              {users.length === 0 && (
+                <div className="p-8 text-center text-zinc-500 text-xs">
+                  No member records found.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -2551,6 +2782,80 @@ export const AdminDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIRM ROLE / STATUS CHANGE */}
+      {confirmModal && confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            className={`w-full max-w-md p-6 rounded-2xl border space-y-4 shadow-2xl ${
+              isLight ? 'bg-[#faf8f5] border-zinc-400 text-zinc-900' : 'bg-[#14161a] border-zinc-700 text-zinc-100'
+            }`}
+          >
+            <div className="flex items-center gap-3 border-b border-zinc-700/50 pb-3">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                  confirmModal.targetValue === 'SUSPENDED' || confirmModal.targetValue === 'superadmin' || confirmModal.targetValue === 'super_admin'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-[#235347]/20 text-[#235347] dark:text-[#99CDD8]'
+                }`}
+              >
+                <AlertTriangle size={18} />
+              </div>
+              <div>
+                <span className="font-bold text-sm">
+                  {confirmModal.type === 'role' ? '// CONFIRM ROLE ELEVATION' : '// CONFIRM ACCOUNT STATUS'}
+                </span>
+                <div className="text-[10px] text-zinc-500">Security Clearance Authorization</div>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs leading-relaxed text-zinc-300">
+              <p>
+                Are you sure you want to change <strong className="text-white font-semibold">{confirmModal.userName}</strong>'s {confirmModal.type} to:
+              </p>
+              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-700/60 text-center">
+                <span className="font-mono text-sm font-bold text-[#235347] dark:text-[#99CDD8] uppercase">
+                  {confirmModal.targetValue}
+                </span>
+              </div>
+              {(confirmModal.targetValue === 'superadmin' || confirmModal.targetValue === 'super_admin') && (
+                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px]">
+                  <strong>Warning:</strong> Super Admins possess full authority over the platform including member promotion, database mutations, and system configuration.
+                </div>
+              )}
+              {confirmModal.targetValue === 'SUSPENDED' && (
+                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-[11px]">
+                  <strong>Warning:</strong> Suspending this account will immediately revoke all dashboard and lab privileges.
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="px-4 py-2 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-zinc-300 font-semibold text-xs transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (confirmModal.type === 'role') {
+                    await updateUserRole(confirmModal.userId, confirmModal.targetValue);
+                  } else {
+                    await updateUserStatus(confirmModal.userId, confirmModal.targetValue as any);
+                  }
+                  setConfirmModal(null);
+                }}
+                className="px-5 py-2 bg-[#163B32] hover:bg-[#235347] text-white rounded-xl font-bold text-xs transition-colors"
+              >
+                Confirm Change
+              </button>
+            </div>
           </div>
         </div>
       )}

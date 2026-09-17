@@ -250,8 +250,11 @@ export interface UserRole {
 
 export interface UserAccount {
   id: string;
+  userId?: string;
   name: string;
+  username?: string;
   email: string;
+  avatar?: string;
   roleId: string;
   customPermissions?: string[];
   status: 'ACTIVE' | 'PENDING' | 'SUSPENDED';

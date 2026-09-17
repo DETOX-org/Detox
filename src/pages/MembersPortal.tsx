@@ -1,31 +1,98 @@
 import React, { useState } from 'react';
 import { PageContainer, SectionHeader, DossierCard } from '../design-system/primitives';
 import { useTheme } from '../ThemeContext';
-import { KeyRound, ArrowRight, BookOpen, Hammer, GitPullRequest, TrendingUp, CheckCircle, ShieldAlert } from 'lucide-react';
+import { KeyRound, ArrowRight, BookOpen, Hammer, GitPullRequest, TrendingUp, CheckCircle, ShieldAlert, User, UserPlus, LogOut, Edit3, Save, Check } from 'lucide-react';
 import { Link } from '../router';
 import { useCms } from '../cms/CmsContext';
+import { useAuth } from '../context/AuthContext';
 
 export const MembersPortal: React.FC = () => {
   const { mode } = useTheme();
   const isLight = mode === 'light';
-  const { currentUser, currentRole, users, switchUser, projects } = useCms();
+  const { projects } = useCms();
+  const { user, profile, role, isAdmin, signIn, signUp, signOut, updateProfile } = useAuth();
 
-  const [memberHandle, setMemberHandle] = useState<string>('arjun.m@detox.build');
-  const [accessKey, setAccessKey] = useState<string>('DTX-ALPHA-9060');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const foundUser = users.find((u) => u.email.toLowerCase() === memberHandle.toLowerCase());
-    if (!foundUser) {
-      setAuthError('No member account found with this electronic mail handle.');
-      return;
-    }
-    setAuthError(null);
-    switchUser(foundUser);
+  // Profile Edit state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editSkills, setEditSkills] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+
+  const handleStartEdit = () => {
+    if (!profile) return;
+    setEditName(profile.name || '');
+    setEditBio(profile.bio || '');
+    setEditSkills((profile.skills || []).join(', '));
+    setIsEditingProfile(true);
+    setProfileSaveSuccess(false);
   };
 
-  const activeUser = currentUser || null;
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    const skillsArr = editSkills
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const res = await updateProfile({
+      name: editName,
+      bio: editBio,
+      skills: skillsArr,
+    });
+
+    setProfileSaving(false);
+    if (!res.error) {
+      setProfileSaveSuccess(true);
+      setIsEditingProfile(false);
+      setTimeout(() => setProfileSaveSuccess(false), 3000);
+    } else {
+      alert(`Failed to save profile: ${res.error.message}`);
+    }
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsSubmitting(true);
+
+    try {
+      if (authMode === 'signin') {
+        const res = await signIn(email, password);
+        if (res.error) {
+          setAuthError(res.error.message);
+        }
+      } else {
+        if (!name.trim()) {
+          setAuthError('Please provide your builder name.');
+          setIsSubmitting(false);
+          return;
+        }
+        const res = await signUp(email, password, name, username);
+        if (res.error) {
+          setAuthError(res.error.message);
+        } else {
+          setAuthSuccess('Account registered successfully! If email confirmation is enabled on Supabase, check your inbox.');
+        }
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <PageContainer maxWidth="6xl">
@@ -35,10 +102,10 @@ export const MembersPortal: React.FC = () => {
         categoryTag="INTERNAL ECOSYSTEM GATEWAY"
         title="The DETOX Member Environment."
         lead="Welcome to the internal student ecosystem. This gateway connects active builders into their profiles, lab tracks, code review pipelines, and working group benches."
-        statusText="CLEARANCE: MEMBER RESTRICTED"
+        statusText={`CLEARANCE: ${user ? (role?.toUpperCase() || 'MEMBER') : 'PUBLIC VISITOR'}`}
       />
 
-      {/* Architecture Visualizer Diagram (The requested flow: LEARN / BUILD / CONTRIBUTE -> GROW -> COMMUNITY) */}
+      {/* Architecture Visualizer Diagram */}
       <div className="mb-14">
         <div className="border-b pb-4 mb-6 flex flex-wrap items-center justify-between font-mono text-xs gap-2">
           <span className="text-[#235347] font-bold">// 01. INTERNAL ECOSYSTEM TOPOLOGY</span>
@@ -143,47 +210,114 @@ export const MembersPortal: React.FC = () => {
       </div>
 
       {/* Authentication / Dashboard Section */}
-      {!activeUser ? (
+      {!user ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-20">
           <div className="lg:col-span-5 space-y-4">
             <h3 className={`text-xl sm:text-2xl font-bold font-sans ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
-              Member Console Authentication
+              Supabase Member Console
             </h3>
             <p className={`font-sans text-xs sm:text-sm leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-400'}`}>
-              Access to hardware bench schedules, internal pull requests, and working group repositories requires member verification.
+              Access to hardware bench reservations, peer pull requests, and internal working group repositories is secured by genuine Supabase Authentication and database Row Level Security.
             </p>
+
             <div
               className={`p-4 rounded-xs border font-mono text-[11px] space-y-2 transition-colors ${
                 isLight ? 'bg-[#faf8f5] border-zinc-300 text-zinc-800' : 'bg-[#14161a] border-zinc-800 text-zinc-300'
               }`}
             >
-              <div className="text-[#235347] font-bold">// INSTANT DEMO ACCESS:</div>
-              <div className="space-y-1">
-                {users.map((u) => (
-                  <button
-                    key={u.id}
-                    onClick={() => switchUser(u)}
-                    className="w-full text-left p-1.5 rounded-2xs hover:bg-zinc-500/10 flex items-center justify-between"
-                  >
-                    <span className="font-semibold">{u.name}</span>
-                    <span className="text-[9px] text-zinc-500">{u.email}</span>
-                  </button>
-                ))}
-              </div>
+              <div className="text-[#235347] font-bold">// AUTHENTICATION DISCIPLINE:</div>
+              <ul className="list-disc list-inside space-y-1 text-[10px] text-zinc-500">
+                <li>Server-side RLS enforcement active</li>
+                <li>New accounts default to Member role</li>
+                <li>Roles managed exclusively by database policies</li>
+              </ul>
             </div>
           </div>
 
           <div className="lg:col-span-7">
-            <DossierCard clipLabel="AUTH // KEYCARD PROMPT" className="p-6 sm:p-8 font-mono">
-              <form onSubmit={handleLogin} className="space-y-4">
+            <DossierCard clipLabel={`AUTH // ${authMode === 'signin' ? 'MEMBER SIGN IN' : 'NEW BUILDER REGISTRATION'}`} className="p-6 sm:p-8 font-mono">
+              {/* Tab Switcher */}
+              <div className="flex border-b mb-6 pb-2 gap-4 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signin');
+                    setAuthError(null);
+                  }}
+                  className={`pb-2 border-b-2 transition-colors ${
+                    authMode === 'signin'
+                      ? 'border-[#235347] text-[#235347]'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  SIGN IN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signup');
+                    setAuthError(null);
+                  }}
+                  className={`pb-2 border-b-2 transition-colors ${
+                    authMode === 'signup'
+                      ? 'border-[#235347] text-[#235347]'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  REGISTER ACCOUNT
+                </button>
+              </div>
+
+              <form onSubmit={handleAuthSubmit} className="space-y-4">
+                {authMode === 'signup' && (
+                  <>
+                    <div>
+                      <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
+                        Full Name:
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Arjun Mehta"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
+                          isLight
+                            ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
+                            : 'bg-[#0e0f12] border-zinc-800 text-zinc-100 focus:border-[#235347]'
+                        } focus:outline-none`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
+                        Builder Username (Optional):
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. arjun_m"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
+                          isLight
+                            ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
+                            : 'bg-[#0e0f12] border-zinc-800 text-zinc-100 focus:border-[#235347]'
+                        } focus:outline-none`}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div>
                   <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
-                    Member Handle / Electronic Mail:
+                    Electronic Mail:
                   </label>
                   <input
-                    type="text"
-                    value={memberHandle}
-                    onChange={(e) => setMemberHandle(e.target.value)}
+                    type="email"
+                    required
+                    placeholder="builder@detox.build"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
                       isLight
                         ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
@@ -194,12 +328,14 @@ export const MembersPortal: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
-                    Laboratory Access Key:
+                    Password:
                   </label>
                   <input
-                    type="text"
-                    value={accessKey}
-                    onChange={(e) => setAccessKey(e.target.value)}
+                    type="password"
+                    required
+                    placeholder="••••••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
                       isLight
                         ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
@@ -209,17 +345,33 @@ export const MembersPortal: React.FC = () => {
                 </div>
 
                 {authError && (
-                  <div className="text-[10px] text-[#F3C3B2] font-semibold">
+                  <div className="text-[11px] text-red-500 font-semibold p-2.5 rounded-xs bg-red-500/10 border border-red-500/30">
                     [ERROR]: {authError}
+                  </div>
+                )}
+
+                {authSuccess && (
+                  <div className="text-[11px] text-emerald-500 font-semibold p-2.5 rounded-xs bg-emerald-500/10 border border-emerald-500/30">
+                    [SUCCESS]: {authSuccess}
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-[#163B32] hover:bg-[#235347] text-white font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-2 mt-2"
+                  disabled={isSubmitting}
+                  className="w-full py-2.5 bg-[#163B32] hover:bg-[#235347] disabled:opacity-50 text-white font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-2 mt-2 shadow-sm"
                 >
-                  <KeyRound size={13} />
-                  <span>INITIALIZE WORKBENCH CONSOLE</span>
+                  {authMode === 'signin' ? (
+                    <>
+                      <KeyRound size={13} />
+                      <span>{isSubmitting ? 'AUTHENTICATING...' : 'INITIALIZE WORKBENCH CONSOLE'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={13} />
+                      <span>{isSubmitting ? 'REGISTERING...' : 'CREATE MEMBER ACCOUNT'}</span>
+                    </>
+                  )}
                 </button>
               </form>
             </DossierCard>
@@ -229,45 +381,160 @@ export const MembersPortal: React.FC = () => {
         /* Authenticated Member Dashboard Environment */
         <div className="space-y-8 mb-20">
           <DossierCard
-            clipLabel={`ACTIVE SESSION // ${activeUser.name.toUpperCase()} (${currentRole?.name.toUpperCase() || 'MEMBER'})`}
+            clipLabel={`ACTIVE SESSION // ${(profile?.name || user.email || 'MEMBER').toUpperCase()} (${role?.toUpperCase() || 'MEMBER'})`}
             className="p-6 sm:p-8 font-mono"
           >
             <div className="flex flex-wrap items-center justify-between border-b pb-4 mb-6 gap-2">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xs bg-[#235347] text-white flex items-center justify-center font-bold text-xs">
-                  {activeUser.avatarInitials}
+                <div className="w-10 h-10 rounded-xs bg-[#235347] text-white flex items-center justify-center font-bold text-sm">
+                  {profile?.name
+                    ? profile.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+                    : 'U'}
                 </div>
                 <div>
                   <div className="text-sm font-bold font-sans">
-                    {activeUser.name}
+                    {profile?.name || user.email}
                   </div>
                   <div className="text-[10px] text-zinc-500">
-                    EMAIL: {activeUser.email} // ROLE: {currentRole?.name}
+                    EMAIL: {user.email} // ROLE: {role?.toUpperCase()} // STATUS: {profile?.status || 'ACTIVE'}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#235347] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] text-[#235347] font-bold">SESSION ACTIVE</span>
 
-                {currentRole?.permissions.includes('*') || currentRole?.id.includes('admin') ? (
+                {isAdmin && (
                   <Link
                     to="/admin"
-                    className="ml-2 px-2.5 py-1 bg-[#163B32] text-white text-[10px] font-bold rounded-xs flex items-center gap-1"
+                    className="ml-2 px-2.5 py-1 bg-[#163B32] hover:bg-[#235347] text-white text-[10px] font-bold rounded-xs flex items-center gap-1 transition-colors"
                   >
                     <ShieldAlert size={11} />
                     <span>LAUNCH CONTROL ROOM</span>
                   </Link>
-                ) : null}
+                )}
 
                 <button
-                  onClick={() => switchUser(null)}
-                  className="ml-2 px-2 py-1 bg-zinc-800 text-zinc-300 text-[9px] hover:bg-zinc-700 rounded-xs"
+                  onClick={() => signOut()}
+                  className="ml-2 px-2.5 py-1 bg-zinc-800 text-zinc-300 text-[10px] hover:bg-zinc-700 rounded-xs flex items-center gap-1"
                 >
-                  DISCONNECT
+                  <LogOut size={11} />
+                  <span>DISCONNECT</span>
                 </button>
               </div>
+            </div>
+
+            {/* Profile Info & Edit Panel */}
+            <div className={`p-4 rounded-xs border mb-6 ${isLight ? 'bg-[#faf8f5] border-zinc-300' : 'bg-[#14161a] border-zinc-800'}`}>
+              <div className="flex items-center justify-between border-b pb-2 mb-3">
+                <span className="text-xs font-bold text-[#235347] flex items-center gap-1.5">
+                  <User size={13} />
+                  <span>MEMBER DOSSIER & PROFILE (PERSISTED IN SUPABASE)</span>
+                </span>
+                {!isEditingProfile ? (
+                  <button
+                    onClick={handleStartEdit}
+                    className="px-2 py-1 bg-[#163B32] hover:bg-[#235347] text-white rounded-xs text-[10px] font-bold flex items-center gap-1"
+                  >
+                    <Edit3 size={11} />
+                    <span>EDIT PROFILE</span>
+                  </button>
+                ) : null}
+              </div>
+
+              {isEditingProfile ? (
+                <form onSubmit={handleSaveProfile} className="space-y-3 font-mono text-xs">
+                  <div>
+                    <label className="block text-[10px] text-zinc-500 uppercase mb-1">Display Name:</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className={`w-full p-2 rounded-xs border text-xs ${isLight ? 'bg-[#f4f1ea] border-zinc-300' : 'bg-[#0e0f12] border-zinc-800'} focus:outline-none`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-zinc-500 uppercase mb-1">Biography / Research Focus:</label>
+                    <textarea
+                      rows={3}
+                      value={editBio}
+                      onChange={(e) => setEditBio(e.target.value)}
+                      className={`w-full p-2 rounded-xs border text-xs ${isLight ? 'bg-[#f4f1ea] border-zinc-300' : 'bg-[#0e0f12] border-zinc-800'} focus:outline-none`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-zinc-500 uppercase mb-1">Technical Disciplines & Skills (comma separated):</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. CUDA, C11, PCB Layout, eBPF"
+                      value={editSkills}
+                      onChange={(e) => setEditSkills(e.target.value)}
+                      className={`w-full p-2 rounded-xs border text-xs ${isLight ? 'bg-[#f4f1ea] border-zinc-300' : 'bg-[#0e0f12] border-zinc-800'} focus:outline-none`}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="submit"
+                      disabled={profileSaving}
+                      className="px-3 py-1.5 bg-[#163B32] hover:bg-[#235347] text-white font-bold rounded-xs flex items-center gap-1"
+                    >
+                      <Save size={12} />
+                      <span>{profileSaving ? 'SAVING TO SUPABASE...' : 'SAVE CHANGES'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingProfile(false)}
+                      className="px-3 py-1.5 bg-zinc-700 text-zinc-200 font-bold rounded-xs"
+                    >
+                      CANCEL
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-[10px] text-zinc-500 block">USERNAME:</span>
+                      <span className="font-semibold">{profile?.username || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-zinc-500 block">JOINED DATE:</span>
+                      <span className="font-semibold">{profile?.created_at ? profile.created_at.split('T')[0] : '2026-01-01'}</span>
+                    </div>
+                  </div>
+
+                  {profile?.bio && (
+                    <div className="pt-2">
+                      <span className="text-[10px] text-zinc-500 block">BIOGRAPHY:</span>
+                      <p className="font-sans text-xs text-zinc-400 mt-0.5">{profile.bio}</p>
+                    </div>
+                  )}
+
+                  {profile?.skills && profile.skills.length > 0 && (
+                    <div className="pt-2">
+                      <span className="text-[10px] text-zinc-500 block mb-1">SPECIALIZATIONS:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {profile.skills.map((s, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded-2xs bg-[#235347]/15 text-[#235347] dark:text-[#99CDD8] text-[10px] font-semibold">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {profileSaveSuccess && (
+                    <div className="text-emerald-500 text-[10px] flex items-center gap-1 font-bold pt-2">
+                      <Check size={12} />
+                      <span>Profile updated in Supabase successfully.</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Dashboard Modules Grid */}
@@ -380,3 +647,4 @@ export const MembersPortal: React.FC = () => {
     </PageContainer>
   );
 };
+
