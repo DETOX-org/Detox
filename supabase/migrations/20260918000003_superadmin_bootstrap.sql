@@ -60,7 +60,17 @@ GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, service_role;
 REVOKE EXECUTE ON FUNCTION public.is_superadmin() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.is_superadmin() TO authenticated, service_role;
 
--- 3. Execute elevation for both owner/administrator accounts if present
+-- 3. Grant schema and table permissions to anon and authenticated roles
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
+
+-- 4. Execute elevation for both owner/administrator accounts if present
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM auth.users WHERE lower(email) = 'ekanshgharde16@gmail.com') THEN
