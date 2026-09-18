@@ -145,7 +145,7 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Creator Signature & Direct Contact */}
-        <div className="pt-6 pb-2 border-t border-zinc-200/70 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div className="pt-8 pb-3 border-t border-zinc-200/70 dark:border-zinc-800/80 flex flex-col items-center justify-center text-center gap-1.5 text-xs">
           <div className="text-zinc-600 dark:text-zinc-400">
             Built &amp; maintained by <span className="font-semibold text-zinc-900 dark:text-zinc-100">Ekansh Gharde</span>
           </div>
