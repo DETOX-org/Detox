@@ -144,8 +144,24 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/* Creator Signature & Direct Contact */}
+        <div className="pt-6 pb-2 border-t border-zinc-200/70 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="text-zinc-600 dark:text-zinc-400">
+            Built &amp; maintained by <span className="font-semibold text-zinc-900 dark:text-zinc-100">Ekansh Gharde</span>
+          </div>
+          <a
+            href="https://www.linkedin.com/in/ekansh-gharde/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-1.5 font-medium text-[#235347] dark:text-[#99CDD8] hover:text-[#163B32] dark:hover:text-[#C8B6FE] transition-colors"
+          >
+            <span>Contact / Connect</span>
+            <span className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+          </a>
+        </div>
+
         {/* Bottom copyright & attribution */}
-        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4 pt-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4 pt-2">
           <div>
             © {new Date().getFullYear()} DETOX Student Engineering Collective. Open Source & Open Hardware.
           </div>
