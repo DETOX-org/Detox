@@ -139,9 +139,16 @@ export interface PersonItem {
   socialLinks?: {
     github?: string;
     twitter?: string;
+    x?: string;
     linkedin?: string;
     website?: string;
     discord?: string;
+    telegram?: string;
+    instagram?: string;
+    youtube?: string;
+    blog?: string;
+    substack?: string;
+    [key: string]: string | undefined;
   };
   photoUrl?: string;
   photoLabel: string;

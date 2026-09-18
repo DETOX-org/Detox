@@ -169,6 +169,11 @@ export const AdminDashboard: React.FC = () => {
     email: '',
     website: '',
     twitter: '',
+    discord: '',
+    telegram: '',
+    instagram: '',
+    youtube: '',
+    blog: '',
     photoUrl: '',
     cutoutUrl: '',
     originalPhotoUrl: '',
@@ -208,11 +213,16 @@ export const AdminDashboard: React.FC = () => {
       activeProject: p.activeProject || '',
       contributedProjectIds: p.contributedProjectIds || [],
       participatedEventIds: p.participatedEventIds || [],
-      githubUrl: p.githubUrl || '',
+      githubUrl: p.githubUrl || p.socialLinks?.github || '',
       linkedin: p.socialLinks?.linkedin || '',
       email: p.email || '',
       website: p.socialLinks?.website || '',
-      twitter: p.socialLinks?.twitter || '',
+      twitter: p.socialLinks?.twitter || p.socialLinks?.x || '',
+      discord: p.socialLinks?.discord || '',
+      telegram: p.socialLinks?.telegram || '',
+      instagram: p.socialLinks?.instagram || '',
+      youtube: p.socialLinks?.youtube || '',
+      blog: p.socialLinks?.blog || p.socialLinks?.substack || '',
       photoUrl: resolvedCutout,
       cutoutUrl: resolvedCutout,
       originalPhotoUrl: p.originalPhotoUrl || resolvedCutout,
@@ -2187,6 +2197,11 @@ export const AdminDashboard: React.FC = () => {
                     linkedin: personForm.linkedin.trim() || undefined,
                     website: personForm.website.trim() || undefined,
                     twitter: personForm.twitter.trim() || undefined,
+                    discord: personForm.discord?.trim() || undefined,
+                    telegram: personForm.telegram?.trim() || undefined,
+                    instagram: personForm.instagram?.trim() || undefined,
+                    youtube: personForm.youtube?.trim() || undefined,
+                    blog: personForm.blog?.trim() || undefined,
                   },
                   photoUrl: personForm.cutoutUrl || personForm.photoUrl || undefined,
                   cutoutUrl: personForm.cutoutUrl || personForm.photoUrl || undefined,
@@ -2526,6 +2541,71 @@ export const AdminDashboard: React.FC = () => {
                       value={personForm.twitter}
                       onChange={(e) => setPersonForm({ ...personForm, twitter: e.target.value })}
                       placeholder="https://twitter.com/..."
+                      className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-mono text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                      Discord (Invite or Handle)
+                    </label>
+                    <input
+                      type="text"
+                      value={personForm.discord || ''}
+                      onChange={(e) => setPersonForm({ ...personForm, discord: e.target.value })}
+                      placeholder="https://discord.gg/... or username"
+                      className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-mono text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                      Telegram URL / Username
+                    </label>
+                    <input
+                      type="text"
+                      value={personForm.telegram || ''}
+                      onChange={(e) => setPersonForm({ ...personForm, telegram: e.target.value })}
+                      placeholder="https://t.me/... or @username"
+                      className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-mono text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                      Instagram Profile URL
+                    </label>
+                    <input
+                      type="url"
+                      value={personForm.instagram || ''}
+                      onChange={(e) => setPersonForm({ ...personForm, instagram: e.target.value })}
+                      placeholder="https://instagram.com/..."
+                      className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-mono text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                      YouTube / Channel URL
+                    </label>
+                    <input
+                      type="url"
+                      value={personForm.youtube || ''}
+                      onChange={(e) => setPersonForm({ ...personForm, youtube: e.target.value })}
+                      placeholder="https://youtube.com/@..."
+                      className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                      Blog / Substack / Technical Writing URL
+                    </label>
+                    <input
+                      type="url"
+                      value={personForm.blog || ''}
+                      onChange={(e) => setPersonForm({ ...personForm, blog: e.target.value })}
+                      placeholder="https://substack.com/... or https://..."
                       className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-mono text-xs"
                     />
                   </div>
