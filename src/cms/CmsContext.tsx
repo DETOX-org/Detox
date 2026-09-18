@@ -286,17 +286,17 @@ function mapDbProfileToUser(p: DbProfile): UserAccount {
 export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user: authUser, profile: authProfile, role: authRole } = useAuth();
 
-  const [projects, setProjects] = useState<ProjectItem[]>(DEFAULT_PROJECTS);
-  const [events, setEvents] = useState<EventItem[]>(DEFAULT_EVENTS);
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>(DEFAULT_MEDIA);
-  const [people, setPeople] = useState<PersonItem[]>(DEFAULT_PEOPLE);
-  const [accomplishments, setAccomplishments] = useState<AccomplishmentItem[]>(DEFAULT_ACCOMPLISHMENTS);
-  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>(DEFAULT_ANNOUNCEMENTS);
+  const [projects, setProjects] = useState<ProjectItem[]>(isSupabaseConfigured ? [] : DEFAULT_PROJECTS);
+  const [events, setEvents] = useState<EventItem[]>(isSupabaseConfigured ? [] : DEFAULT_EVENTS);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>(isSupabaseConfigured ? [] : DEFAULT_MEDIA);
+  const [people, setPeople] = useState<PersonItem[]>(isSupabaseConfigured ? [] : DEFAULT_PEOPLE);
+  const [accomplishments, setAccomplishments] = useState<AccomplishmentItem[]>(isSupabaseConfigured ? [] : DEFAULT_ACCOMPLISHMENTS);
+  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>(isSupabaseConfigured ? [] : DEFAULT_ANNOUNCEMENTS);
   const [roles] = useState<UserRole[]>(DEFAULT_ROLES);
   const [users, setUsers] = useState<UserAccount[]>(DEFAULT_USERS);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [collageSettings, setCollageSettings] = useState<CollageStageSettings>(DEFAULT_COLLAGE_SETTINGS);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(DEFAULT_AUDIT_LOGS);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(isSupabaseConfigured ? [] : DEFAULT_AUDIT_LOGS);
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
 
   // Derive Current User directly from Supabase Auth & Profile
@@ -348,16 +348,16 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(50),
       ]);
 
-      if (projRes.data && projRes.data.length > 0) {
+      if (projRes.data && !projRes.error) {
         setProjects(projRes.data.map(mapDbProject));
       }
-      if (evtRes.data && evtRes.data.length > 0) {
+      if (evtRes.data && !evtRes.error) {
         setEvents(evtRes.data.map(mapDbEvent));
       }
-      if (peopleRes.data && peopleRes.data.length > 0) {
+      if (peopleRes.data && !peopleRes.error) {
         setPeople(peopleRes.data.map(mapDbPerson));
       }
-      if (mediaRes.data && mediaRes.data.length > 0) {
+      if (mediaRes.data && !mediaRes.error) {
         setMediaItems(
           mediaRes.data.map((m: any) => ({
             id: m.id,
@@ -373,7 +373,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }))
         );
       }
-      if (accRes.data && accRes.data.length > 0) {
+      if (accRes.data && !accRes.error) {
         setAccomplishments(
           accRes.data.map((a: any) => ({
             id: a.id,
@@ -387,7 +387,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }))
         );
       }
-      if (annRes.data && annRes.data.length > 0) {
+      if (annRes.data && !annRes.error) {
         setAnnouncements(
           annRes.data.map((an: any) => ({
             id: an.id,
@@ -400,7 +400,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }))
         );
       }
-      if (colRes.data) {
+      if (colRes.data && !colRes.error) {
         setCollageSettings((prev) => ({
           ...prev,
           title: colRes.data.title || prev.title,
@@ -414,7 +414,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           decorativeElements: colRes.data.decorative_elements || prev.decorativeElements,
         }));
       }
-      if (audRes.data && audRes.data.length > 0) {
+      if (audRes.data && !audRes.error) {
         setAuditLogs(
           audRes.data.map((l: any) => ({
             id: l.id,
@@ -430,7 +430,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         );
       }
     } catch (err) {
-      console.warn('Error fetching data from Supabase, maintaining seed state:', err);
+      console.warn('Error fetching data from Supabase:', err);
     } finally {
       setIsLoadingData(false);
     }

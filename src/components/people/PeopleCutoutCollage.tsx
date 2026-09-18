@@ -751,6 +751,18 @@ export const PeopleCutoutCollage: React.FC<PeopleCutoutCollageProps> = ({
           />
         )}
 
+        {/* Empty State */}
+        {sortedPeople.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 pointer-events-none">
+            <div className="p-5 rounded-2xl bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 max-w-sm space-y-2 shadow-lg">
+              <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">No builders published</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Add and publish members via the Admin dashboard to display them on the collective stage.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Builders Cut-Out Assembly */}
         <div className="absolute inset-0 w-full h-full pointer-events-none">
           {sortedPeople.map((person, index) => {

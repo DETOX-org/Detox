@@ -84,7 +84,7 @@ const getRoleIcon = (roleArea: string) => {
 
 export const PersonProfilePage: React.FC = () => {
   const { path } = useRouter();
-  const { people, projects, events } = useCms();
+  const { people, projects, events, isLoadingData } = useCms();
   const { mode } = useTheme();
   const isLight = mode === 'light';
 
@@ -95,7 +95,19 @@ export const PersonProfilePage: React.FC = () => {
     (p) => (p.slug && p.slug.toLowerCase() === slugOrId.toLowerCase()) || p.id === slugOrId
   );
 
-  // If person not found, render clean return state
+  // If loading data, show spinner
+  if (!person && isLoadingData) {
+    return (
+      <PageContainer maxWidth="6xl">
+        <div className="py-24 text-center space-y-4">
+          <div className="inline-block w-8 h-8 border-2 border-[#235347] border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-500 text-sm">Loading builder profile...</p>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // If person not found after load, render clean return state
   if (!person) {
     return (
       <PageContainer maxWidth="6xl">
