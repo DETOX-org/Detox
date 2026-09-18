@@ -22,6 +22,7 @@ interface CutoutItemProps {
   isFocused: boolean;
   isReceded: boolean;
   isLight: boolean;
+  isGardenBg: boolean;
   cutoutSrc: string;
   isImageFailed: boolean;
   viewportMode?: 'desktop' | 'tablet' | 'mobile';
@@ -40,6 +41,7 @@ const PersonCutoutItem = React.memo<CutoutItemProps>(({
   isFocused,
   isReceded,
   isLight,
+  isGardenBg,
   cutoutSrc,
   isImageFailed,
   viewportMode = 'desktop',
@@ -76,7 +78,7 @@ const PersonCutoutItem = React.memo<CutoutItemProps>(({
   // Focus behavior settings from stage or person
   const hoverConfig = stageSettings?.hoverBehavior;
   const focusScaleMultiplier = hoverConfig?.focusScale === 'subtle' ? 1.03 : hoverConfig?.focusScale === 'prominent' ? 1.10 : 1.06;
-  const recessionOpacityVal = hoverConfig?.recession === 'subtle' ? (isLight ? 0.60 : 0.50) : hoverConfig?.recession === 'strong' ? (isLight ? 0.28 : 0.20) : (isLight ? 0.45 : 0.35);
+  const recessionOpacityVal = hoverConfig?.recession === 'subtle' ? (isLight ? 0.65 : 0.55) : hoverConfig?.recession === 'strong' ? (isLight ? 0.32 : 0.22) : (isLight ? 0.50 : 0.38);
   const liftDistancePx = hoverConfig?.lift === 'low' ? '-8px' : hoverConfig?.lift === 'high' ? '-20px' : '-14px';
 
   // Compute transform and visual styling with GPU acceleration (translate3d)
@@ -112,15 +114,17 @@ const PersonCutoutItem = React.memo<CutoutItemProps>(({
 
     const filters: string[] = [];
 
-    // Base drop shadow
+    // Base drop shadow - tinted to garden greens / ambient ground when garden is active
     if (person.shadowSettings?.enabled !== false) {
       if (person.shadowSettings) {
         const str = (person.shadowSettings.strength ?? 30) / 100;
         const sft = person.shadowSettings.softness ?? 18;
         const off = person.shadowSettings.offset ?? 12;
-        filters.push(`drop-shadow(0 ${off}px ${sft}px rgba(0,0,0,${str}))`);
+        filters.push(`drop-shadow(0 ${off}px ${sft}px rgba(${isGardenBg ? '6,18,12' : '0,0,0'},${str}))`);
       } else if (person.cutoutStyle === 'shadowed') {
-        filters.push('drop-shadow(0 24px 32px rgba(0,0,0,0.38))');
+        filters.push(`drop-shadow(0 24px 32px rgba(${isGardenBg ? '6,18,12' : '0,0,0'},0.38))`);
+      } else if (isGardenBg) {
+        filters.push('drop-shadow(0 14px 22px rgba(6,20,14,0.30))');
       } else {
         filters.push('drop-shadow(0 12px 18px rgba(0,0,0,0.18))');
       }
@@ -138,7 +142,7 @@ const PersonCutoutItem = React.memo<CutoutItemProps>(({
 
     // Focused halo
     if (isFocused) {
-      filters.push(`drop-shadow(0 20px 28px rgba(0,0,0,0.30))`);
+      filters.push(`drop-shadow(0 20px 28px rgba(${isGardenBg ? '4,16,10' : '0,0,0'},0.36))`);
       filters.push(`drop-shadow(0 0 14px ${accent}70)`);
     }
 
@@ -186,6 +190,25 @@ const PersonCutoutItem = React.memo<CutoutItemProps>(({
     >
       {/* Physical Scissor-Cut Silhouette (STRICTLY NO BOX CONTAINER) */}
       <div className="relative inline-block pointer-events-auto">
+        {/* Environmental Ground Contact Shadow (Soft organic grass occlusion beneath feet) */}
+        {isGardenBg && (
+          <div
+            className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 pointer-events-none rounded-[100%] transition-all duration-300 ${
+              isFocused
+                ? 'w-[70%] h-4 opacity-35 blur-sm translate-y-3'
+                : isReceded
+                ? 'w-[80%] h-3.5 opacity-30 blur-xs'
+                : 'w-[90%] h-4 opacity-75 blur-[2.5px]'
+            }`}
+            style={{
+              background: isLight
+                ? 'radial-gradient(ellipse at center, rgba(12, 30, 20, 0.75) 0%, rgba(18, 45, 28, 0.35) 50%, transparent 75%)'
+                : 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.95) 0%, rgba(4, 14, 8, 0.55) 50%, transparent 75%)',
+              zIndex: -1,
+            }}
+          />
+        )}
+
         {hasCutout ? (
           <img
             src={cutoutSrc}
@@ -489,10 +512,18 @@ export const PeopleCutoutCollage: React.FC<PeopleCutoutCollageProps> = ({
   }, [visiblePeople]);
 
   // Stage background styling
+  const isGardenBg = (stageSettings?.bgType || 'garden') === 'garden';
+
   const stageBgStyle = useMemo(() => {
-    const bgType = stageSettings?.bgType || 'gradient';
+    const bgType = stageSettings?.bgType || 'garden';
     const bgColor = stageSettings?.bgColor || '#235347';
 
+    if (bgType === 'garden') {
+      return {
+        backgroundColor: isLight ? '#E7EFEA' : '#0B120E',
+        borderColor: isLight ? 'rgba(35, 83, 71, 0.22)' : 'rgba(56, 178, 162, 0.20)',
+      };
+    }
     if (bgType === 'solid') {
       return {
         backgroundColor: isLight ? '#F4F1EA' : '#111419',
@@ -560,23 +591,82 @@ export const PeopleCutoutCollage: React.FC<PeopleCutoutCollageProps> = ({
         onPointerLeave={handleStagePointerLeave}
         style={stageBgStyle}
         className={`relative w-full ${stageHeightClass} rounded-3xl overflow-hidden transition-colors duration-700 ${
-          stageSettings?.bgType === 'gradient'
+          isGardenBg
+            ? 'border shadow-2xl ring-1 ring-black/5 dark:ring-white/5'
+            : stageSettings?.bgType === 'gradient'
             ? isLight
               ? 'bg-gradient-to-b from-[#FAF8F5]/90 via-[#F4F1EA]/70 to-[#ECE7DE]/90 border border-zinc-200/80 shadow-inner'
               : 'bg-gradient-to-b from-[#0e1014] via-[#111419] to-[#0a0c0e] border border-zinc-800/80 shadow-2xl'
             : 'border shadow-xl'
         }`}
       >
-        {/* Stage Pattern */}
+        {/* Calm Environmental Garden Background Layer */}
+        {isGardenBg && (
+          <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none">
+            {/* High-fidelity responsive garden foundation image */}
+            <img
+              src="/garden-bg.jpg"
+              alt="DETOX Garden Environment"
+              className={`absolute inset-0 w-full h-full object-cover object-[center_58%] sm:object-[center_54%] pointer-events-none select-none transition-all duration-700 ${
+                isLight
+                  ? 'brightness-[0.97] contrast-[0.98] saturate-[0.88]'
+                  : 'brightness-[0.45] contrast-[1.10] saturate-[0.72]'
+              }`}
+              loading="eager"
+              decoding="async"
+              draggable={false}
+            />
+
+            {/* Atmospheric Environment Tone Washes */}
+            <div
+              className="absolute inset-0 pointer-events-none transition-opacity duration-700"
+              style={{
+                background: isLight
+                  ? 'linear-gradient(to bottom, rgba(250, 248, 245, 0.40) 0%, rgba(250, 248, 245, 0.08) 35%, rgba(20, 48, 32, 0.06) 70%, rgba(16, 36, 24, 0.22) 100%)'
+                  : 'linear-gradient(to bottom, rgba(12, 13, 16, 0.55) 0%, rgba(12, 13, 16, 0.15) 30%, rgba(6, 18, 12, 0.48) 70%, rgba(3, 9, 6, 0.78) 100%)',
+              }}
+            />
+
+            {/* Atmospheric Depth Horizon Mist (Layer between distant trees and open foreground lawn) */}
+            <div
+              className="absolute inset-x-0 top-[28%] h-[32%] pointer-events-none transition-opacity duration-700"
+              style={{
+                background: isLight
+                  ? 'linear-gradient(to bottom, transparent 0%, rgba(246, 249, 244, 0.25) 50%, transparent 100%)'
+                  : 'linear-gradient(to bottom, transparent 0%, rgba(16, 30, 24, 0.32) 50%, transparent 100%)',
+              }}
+            />
+
+            {/* Calm Vignette Frame */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: isLight
+                  ? 'radial-gradient(ellipse 92% 88% at 50% 50%, transparent 55%, rgba(35, 83, 71, 0.15) 100%)'
+                  : 'radial-gradient(ellipse 92% 88% at 50% 50%, transparent 50%, rgba(0, 0, 0, 0.60) 100%)',
+              }}
+            />
+          </div>
+        )}
+
+        {/* Stage Pattern Overlay */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-25"
+          className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
+            isGardenBg ? 'opacity-15 dark:opacity-10' : 'opacity-40 dark:opacity-25'
+          }`}
           style={patternStyle}
         />
 
-        {/* Ambient Warm Vignette & Lab Atmosphere Glows */}
-        <div className="absolute -top-24 left-1/4 w-96 h-96 rounded-full bg-[#38B2A2]/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 right-1/4 w-96 h-96 rounded-full bg-[#F3C3B2]/12 blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 rounded-full bg-[#C8B6FE]/8 blur-3xl pointer-events-none" />
+        {/* Ambient Atmosphere Glows */}
+        {!isGardenBg ? (
+          <>
+            <div className="absolute -top-24 left-1/4 w-96 h-96 rounded-full bg-[#38B2A2]/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 right-1/4 w-96 h-96 rounded-full bg-[#F3C3B2]/12 blur-3xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 rounded-full bg-[#C8B6FE]/8 blur-3xl pointer-events-none" />
+          </>
+        ) : (
+          <div className="absolute top-0 right-1/4 w-96 h-64 rounded-full bg-[#99CDD8]/10 blur-3xl pointer-events-none" />
+        )}
 
         {/* Decorative Editorial Elements (Tape, Stamps, Paper scraps, Color chips) */}
         {stageSettings?.decorativeElements?.map((elem: DecorativeElement) => {
@@ -649,15 +739,17 @@ export const PeopleCutoutCollage: React.FC<PeopleCutoutCollageProps> = ({
           );
         })}
 
-        {/* Studio Floor Line / Shadow Horizon */}
-        <div
-          className="absolute bottom-0 inset-x-0 h-28 pointer-events-none transition-opacity duration-700"
-          style={{
-            background: isLight
-              ? 'linear-gradient(to top, rgba(215, 208, 195, 0.45) 0%, rgba(240, 235, 226, 0.1) 60%, transparent 100%)'
-              : 'linear-gradient(to top, rgba(8, 10, 12, 0.85) 0%, rgba(14, 16, 20, 0.2) 60%, transparent 100%)',
-          }}
-        />
+        {/* Studio Floor Line / Shadow Horizon for non-garden backgrounds */}
+        {!isGardenBg && (
+          <div
+            className="absolute bottom-0 inset-x-0 h-28 pointer-events-none transition-opacity duration-700"
+            style={{
+              background: isLight
+                ? 'linear-gradient(to top, rgba(215, 208, 195, 0.45) 0%, rgba(240, 235, 226, 0.1) 60%, transparent 100%)'
+                : 'linear-gradient(to top, rgba(8, 10, 12, 0.85) 0%, rgba(14, 16, 20, 0.2) 60%, transparent 100%)',
+            }}
+          />
+        )}
 
         {/* Builders Cut-Out Assembly */}
         <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -676,6 +768,7 @@ export const PeopleCutoutCollage: React.FC<PeopleCutoutCollageProps> = ({
                 isFocused={isFocused}
                 isReceded={isReceded}
                 isLight={isLight}
+                isGardenBg={isGardenBg}
                 cutoutSrc={cutoutSrc}
                 isImageFailed={isFailed}
                 viewportMode={viewportMode}
@@ -691,24 +784,24 @@ export const PeopleCutoutCollage: React.FC<PeopleCutoutCollageProps> = ({
 
         {/* Stage Bottom Bar / Editorial Caption */}
         <div
-          className={`absolute bottom-3 inset-x-4 sm:inset-x-8 py-2 px-4 rounded-xl flex items-center justify-between text-xs backdrop-blur-sm pointer-events-none transition-colors duration-500 ${
+          className={`absolute bottom-3 inset-x-4 sm:inset-x-8 py-2.5 px-4 rounded-2xl flex items-center justify-between text-xs backdrop-blur-md pointer-events-none transition-all duration-500 shadow-md ${
             isLight
-              ? 'bg-white/70 border border-zinc-200/70 text-zinc-600'
-              : 'bg-black/50 border border-zinc-800/80 text-zinc-400'
+              ? 'bg-white/85 border border-white/80 text-zinc-700 shadow-zinc-900/5'
+              : 'bg-[#0b100d]/85 border border-emerald-950/60 text-zinc-300 shadow-black/50'
           }`}
         >
           <div className="flex items-center gap-2">
             <Compass size={13} className="text-[#38B2A2]" />
-            <span className="font-medium text-zinc-900 dark:text-zinc-200 hidden sm:inline">
-              {stageSettings?.categoryTag || 'Living Cut-Out Collective'}
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100 hidden sm:inline">
+              {stageSettings?.categoryTag || 'Active Student Collective'}
             </span>
-            <span className="text-[11px] text-zinc-500">
-              Hover over any builder to lift into focus · Click for individual student story
+            <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Hover to lift · Click for individual student story
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-3 text-[11px] font-mono text-zinc-500">
-            <span>Z-DEPTH COMPOSITION</span>
+          <div className="hidden md:flex items-center gap-3 text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+            <span>GARDEN COLLECTIVE</span>
             <span>·</span>
             <span>{sortedPeople.length} BUILDERS</span>
           </div>

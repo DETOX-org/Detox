@@ -715,14 +715,40 @@ export const ArrangeCollageView: React.FC<ArrangeCollageViewProps> = ({
                 setSelectedElementId(null);
               }}
               className={`relative w-full h-[520px] sm:h-[600px] rounded-3xl overflow-hidden border shadow-xl select-none cursor-default transition-colors ${
-                isLight
+                (stageSettings.bgType || 'garden') === 'garden'
+                  ? 'border-emerald-900/30 shadow-2xl'
+                  : isLight
                   ? 'bg-gradient-to-b from-[#FAF8F5] via-[#F4F1EA] to-[#ECE7DE] border-zinc-300'
                   : 'bg-gradient-to-b from-[#0e1014] via-[#111419] to-[#0a0c0e] border-zinc-800'
               }`}
             >
+              {/* Garden Background (when active) */}
+              {(stageSettings.bgType || 'garden') === 'garden' && (
+                <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
+                  <img
+                    src="/garden-bg.jpg"
+                    alt="Garden Background"
+                    className={`absolute inset-0 w-full h-full object-cover object-[center_56%] pointer-events-none select-none transition-all duration-700 ${
+                      isLight
+                        ? 'brightness-[0.97] contrast-[0.98] saturate-[0.88]'
+                        : 'brightness-[0.45] contrast-[1.10] saturate-[0.72]'
+                    }`}
+                    draggable={false}
+                  />
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: isLight
+                        ? 'linear-gradient(to bottom, rgba(250, 248, 245, 0.40) 0%, rgba(250, 248, 245, 0.08) 35%, rgba(16, 36, 24, 0.22) 100%)'
+                        : 'linear-gradient(to bottom, rgba(12, 13, 16, 0.55) 0%, rgba(12, 13, 16, 0.15) 30%, rgba(3, 9, 6, 0.78) 100%)',
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Stage Pattern */}
               <div
-                className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
+                className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-15"
                 style={{
                   backgroundImage: `radial-gradient(circle at 1px 1px, ${isLight ? '#23534720' : '#38B2A225'} 1px, transparent 0)`,
                   backgroundSize: '32px 32px',
@@ -730,18 +756,24 @@ export const ArrangeCollageView: React.FC<ArrangeCollageViewProps> = ({
               />
 
               {/* Ambient Stage Lighting */}
-              <div className="absolute -top-20 left-1/4 w-96 h-96 rounded-full bg-[#38B2A2]/10 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-20 right-1/4 w-96 h-96 rounded-full bg-[#F3C3B2]/12 blur-3xl pointer-events-none" />
+              {(stageSettings.bgType || 'garden') !== 'garden' && (
+                <>
+                  <div className="absolute -top-20 left-1/4 w-96 h-96 rounded-full bg-[#38B2A2]/10 blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-20 right-1/4 w-96 h-96 rounded-full bg-[#F3C3B2]/12 blur-3xl pointer-events-none" />
+                </>
+              )}
 
-              {/* Studio Floor Horizon Line */}
-              <div
-                className="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
-                style={{
-                  background: isLight
-                    ? 'linear-gradient(to top, rgba(200, 195, 185, 0.45) 0%, transparent 100%)'
-                    : 'linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, transparent 100%)',
-                }}
-              />
+              {/* Studio Floor Horizon Line (non-garden) */}
+              {(stageSettings.bgType || 'garden') !== 'garden' && (
+                <div
+                  className="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
+                  style={{
+                    background: isLight
+                      ? 'linear-gradient(to top, rgba(200, 195, 185, 0.45) 0%, transparent 100%)'
+                      : 'linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, transparent 100%)',
+                  }}
+                />
+              )}
 
               {/* Top Hint Pill */}
               <div className="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-medium border border-white/10 shadow-lg">
@@ -1477,14 +1509,15 @@ export const ArrangeCollageView: React.FC<ArrangeCollageViewProps> = ({
                   <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                     Background Surface Type
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
+                      { id: 'garden', label: 'Empty Garden' },
                       { id: 'gradient', label: 'Subtle Gradient' },
                       { id: 'paper', label: 'Paper Texture' },
                       { id: 'solid', label: 'Solid Matte' },
                       { id: 'palette', label: 'Palette Tint' },
                     ].map((bg) => {
-                      const isSelected = (stageSettings.bgType || 'gradient') === bg.id;
+                      const isSelected = (stageSettings.bgType || 'garden') === bg.id;
                       return (
                         <button
                           key={bg.id}

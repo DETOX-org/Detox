@@ -6,7 +6,6 @@ import { Link } from '../../router';
 import type {
   ContentStatus,
   PersonItem,
-  PersonRoleArea,
   CollageVisualSize,
   PersonCropRatio,
 } from '../../cms/types';
@@ -157,7 +156,7 @@ export const AdminDashboard: React.FC = () => {
   const initialPersonForm = {
     name: '',
     slug: '',
-    roleArea: 'Technical' as PersonRoleArea,
+    roleArea: '',
     focusTag: '',
     oneSentence: '',
     biography: '',
@@ -2158,16 +2157,24 @@ export const AdminDashboard: React.FC = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                const trimmedName = personForm.name.trim();
+                if (!trimmedName) return;
+
                 const computedSlug =
                   personForm.slug.trim() ||
-                  personForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                  trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') ||
+                  `builder-${Date.now()}`;
+
+                const role = personForm.roleArea.trim() || 'Member';
+                const focus = personForm.focusTag.trim() || role;
+                const sentence = personForm.oneSentence.trim();
 
                 const personData: any = {
-                  name: personForm.name.trim(),
+                  name: trimmedName,
                   slug: computedSlug,
-                  roleArea: personForm.roleArea,
-                  focusTag: personForm.focusTag.trim() || personForm.roleArea,
-                  oneSentence: personForm.oneSentence.trim(),
+                  roleArea: role,
+                  focusTag: focus,
+                  oneSentence: sentence,
                   biography: personForm.biography.trim(),
                   areaOfContribution: personForm.areaOfContribution.trim(),
                   activeProject: personForm.activeProject.trim() || (projects[0]?.title || 'detox-os'),
@@ -2190,8 +2197,8 @@ export const AdminDashboard: React.FC = () => {
                   stageZIndex: Number(personForm.stageZIndex),
                   isForegroundAnchor: Boolean(personForm.isForegroundAnchor),
                   cutoutContour: personForm.cutoutContour,
-                  photoLabel: personForm.name,
-                  photoCaption: personForm.oneSentence,
+                  photoLabel: trimmedName,
+                  photoCaption: sentence,
                   collageSize: personForm.collageSize,
                   aspectRatio: personForm.aspectRatio,
                   paletteAccent: personForm.paletteAccent,
@@ -2209,13 +2216,13 @@ export const AdminDashboard: React.FC = () => {
               }}
               className="space-y-6 text-xs font-sans"
             >
-              {/* 1. PHOTO SECTION */}
+              {/* 1. PHOTO SECTION (OPTIONAL) */}
               <div className="space-y-2 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40">
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
-                  Photo & Cut-Out
+                  Photo & Cut-Out (Optional)
                 </label>
                 <p className="text-xs text-zinc-500 mb-3">
-                  Upload a photo. You can remove the background with one click to create an isolated cut-out, or upload an already-transparent PNG.
+                  Upload a photo now or add it later. One-click background removal isolates silhouettes for the collective stage.
                 </p>
                 <ImageCutoutUploader
                   currentCutoutUrl={personForm.cutoutUrl || personForm.photoUrl}
@@ -2235,8 +2242,9 @@ export const AdminDashboard: React.FC = () => {
 
               {/* 2. BASIC INFORMATION */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
-                  Basic Information
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800 pb-1.5 flex items-center justify-between">
+                  <span>Basic Information</span>
+                  <span className="text-[11px] font-normal text-zinc-500 lowercase">only name is required to save</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2257,28 +2265,22 @@ export const AdminDashboard: React.FC = () => {
                           slug: editingPersonId ? personForm.slug : autoSlug,
                         });
                       }}
-                      placeholder="e.g. Dev P."
+                      placeholder="e.g. Rahul Sharma"
                       className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                      Role / Discipline *
+                      Role / Title
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={personForm.roleArea}
-                      onChange={(e) => setPersonForm({ ...personForm, roleArea: e.target.value as any })}
-                      className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium"
-                    >
-                      <option value="Technical">Technical & Systems</option>
-                      <option value="Projects">Silicon & Hardware</option>
-                      <option value="Research">Applied Research & Tensors</option>
-                      <option value="Operations">Network Operations & Security</option>
-                      <option value="Open Source">Open Source & Toolchains</option>
-                      <option value="Community">Community & Lab Operations</option>
-                      <option value="Design">Design & Physical Prototyping</option>
-                    </select>
+                      onChange={(e) => setPersonForm({ ...personForm, roleArea: e.target.value })}
+                      placeholder="e.g. Founder, AI Researcher, Developer, Core Member..."
+                      className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium"
+                    />
                   </div>
                 </div>
 
@@ -2290,21 +2292,20 @@ export const AdminDashboard: React.FC = () => {
                     type="text"
                     value={personForm.focusTag}
                     onChange={(e) => setPersonForm({ ...personForm, focusTag: e.target.value })}
-                    placeholder="e.g. Microkernel IPC, CUDA & Matrix Math, KiCad Hardware"
+                    placeholder="e.g. Microkernel IPC, CUDA & Matrix Math, Hardware, Distributed Systems"
                     className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Short Description (Teaser) *
+                    Short Description / Teaser
                   </label>
                   <textarea
-                    required
                     rows={2}
                     value={personForm.oneSentence}
                     onChange={(e) => setPersonForm({ ...personForm, oneSentence: e.target.value })}
-                    placeholder="1-2 sentences on what they actually build or lead in the collective."
+                    placeholder="1-2 sentences on what they build or lead (optional, can be added later)."
                     className="w-full p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs"
                   />
                 </div>

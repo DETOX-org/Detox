@@ -1,4 +1,4 @@
-﻿import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 export type StorageBucket = 'avatars' | 'people' | 'projects' | 'events' | 'media';
 
@@ -24,7 +24,8 @@ export function dataUrlToBlob(dataUrl: string): { blob: Blob; mimeType: string }
 export async function uploadToSupabaseStorage(
   source: File | Blob | string,
   bucket: StorageBucket = 'people',
-  fileNameHint = 'asset'
+  fileNameHint = 'asset',
+  userId?: string
 ): Promise<string> {
   if (!isSupabaseConfigured) {
     console.warn('Supabase not configured. Returning local object representation.');
@@ -58,7 +59,16 @@ export async function uploadToSupabaseStorage(
   const cleanHint = fileNameHint.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'file';
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 7);
-  const filePath = `${cleanHint}_${timestamp}_${randomSuffix}.${ext}`;
+
+  // If uploading to avatars bucket, scope under user ID folder for RLS ownership compliance
+  let ownerId = userId;
+  if (!ownerId && bucket === 'avatars') {
+    const { data: userData } = await supabase.auth.getUser();
+    ownerId = userData.user?.id;
+  }
+
+  const fileName = `${cleanHint}_${timestamp}_${randomSuffix}.${ext}`;
+  const filePath = ownerId ? `${ownerId}/${fileName}` : fileName;
 
   const { data, error } = await supabase.storage.from(bucket).upload(filePath, blob, {
     cacheControl: '3600',

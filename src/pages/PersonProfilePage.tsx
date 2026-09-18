@@ -263,23 +263,29 @@ export const PersonProfilePage: React.FC = () => {
           {/* Header */}
           <div className="space-y-3 border-b border-zinc-200 dark:border-zinc-800 pb-8">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#235347] dark:text-[#99CDD8]">
-                {person.focusTag}
-              </span>
-              <span className="text-zinc-400">·</span>
-              <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                {React.createElement(getRoleIcon(person.roleArea), { size: 13 })}
-                <span>{person.roleArea} Lead</span>
-              </div>
+              {person.focusTag && (
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#235347] dark:text-[#99CDD8]">
+                  {person.focusTag}
+                </span>
+              )}
+              {person.focusTag && person.roleArea && <span className="text-zinc-400">·</span>}
+              {person.roleArea && (
+                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  {React.createElement(getRoleIcon(person.roleArea), { size: 13 })}
+                  <span>{person.roleArea}</span>
+                </div>
+              )}
             </div>
 
             <h1 className="font-display text-4xl sm:text-6xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
               {person.name}
             </h1>
 
-            <p className="text-base sm:text-lg font-sans text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-2xl">
-              {person.oneSentence}
-            </p>
+            {person.oneSentence && (
+              <p className="text-base sm:text-lg font-sans text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-2xl">
+                {person.oneSentence}
+              </p>
+            )}
           </div>
 
           {/* Area of Contribution */}

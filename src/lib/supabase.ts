@@ -1,14 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://hesflcaaupmphtorfqij.supabase.co').trim();
-const SUPABASE_ANON_KEY = (
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlc2ZsY2FhdXBtcGh0b3JmcWlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTY2MDksImV4cCI6MjEwNTIzMjYwOX0.VOVHsvH5GuU7W63e7aiu_eXUizaSj3iM0qimHuYzqSM'
-).trim();
+const rawUrl = import.meta.env.VITE_SUPABASE_URL;
+const rawAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+const SUPABASE_URL = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+const SUPABASE_ANON_KEY = typeof rawAnonKey === 'string' ? rawAnonKey.trim() : '';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const isSupabaseConfigured = Boolean(
+  SUPABASE_URL &&
+  SUPABASE_ANON_KEY &&
+  SUPABASE_URL !== 'https://placeholder.supabase.co' &&
+  !SUPABASE_URL.includes('your-project')
+);
+
+if (!isSupabaseConfigured && typeof window !== 'undefined') {
+  console.warn(
+    '[DETOX Configuration] Missing Supabase environment variables (VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY). ' +
+    'Live backend synchronization and authentication are disabled until configured.'
+  );
+}
+
+// Fallback dummy parameters prevent the Supabase client constructor from throwing at module initialization time
+export const supabase = createClient(
+  SUPABASE_URL || 'https://unconfigured.supabase.co',
+  SUPABASE_ANON_KEY || 'unconfigured-anon-key',
+  {
     auth: {
       persistSession: true,
       autoRefreshToken: true,

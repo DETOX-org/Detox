@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- DETOX Platform V2 — Storage Buckets & Storage Security Policies
 -- Migration: 20260918000002_storage_setup.sql
 -- ============================================================================
@@ -24,13 +24,19 @@ CREATE POLICY "Public read access for media objects"
   ON storage.objects FOR SELECT
   USING (bucket_id IN ('avatars', 'people', 'projects', 'events', 'media'));
 
--- Authenticated Avatar Uploads (Users can upload their own avatars)
+-- Authenticated Avatar Uploads (Users can only upload and modify their own avatars)
 DROP POLICY IF EXISTS "Users can upload their own avatars" ON storage.objects;
 CREATE POLICY "Users can upload their own avatars"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'avatars' AND
-    auth.role() = 'authenticated'
+    auth.role() = 'authenticated' AND
+    (
+      (storage.foldername(name))[1] = auth.uid()::text OR
+      name LIKE (auth.uid()::text || '/%') OR
+      name LIKE (auth.uid()::text || '_%') OR
+      auth.uid() = owner
+    )
   );
 
 DROP POLICY IF EXISTS "Users can update their own avatars" ON storage.objects;
@@ -38,7 +44,37 @@ CREATE POLICY "Users can update their own avatars"
   ON storage.objects FOR UPDATE
   USING (
     bucket_id = 'avatars' AND
-    auth.role() = 'authenticated'
+    auth.role() = 'authenticated' AND
+    (
+      (storage.foldername(name))[1] = auth.uid()::text OR
+      name LIKE (auth.uid()::text || '/%') OR
+      name LIKE (auth.uid()::text || '_%') OR
+      auth.uid() = owner
+    )
+  )
+  WITH CHECK (
+    bucket_id = 'avatars' AND
+    auth.role() = 'authenticated' AND
+    (
+      (storage.foldername(name))[1] = auth.uid()::text OR
+      name LIKE (auth.uid()::text || '/%') OR
+      name LIKE (auth.uid()::text || '_%') OR
+      auth.uid() = owner
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can delete their own avatars" ON storage.objects;
+CREATE POLICY "Users can delete their own avatars"
+  ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'avatars' AND
+    auth.role() = 'authenticated' AND
+    (
+      (storage.foldername(name))[1] = auth.uid()::text OR
+      name LIKE (auth.uid()::text || '/%') OR
+      name LIKE (auth.uid()::text || '_%') OR
+      auth.uid() = owner
+    )
   );
 
 -- Admins and Superadmins have full upload/update/delete control across all buckets
@@ -47,13 +83,17 @@ CREATE POLICY "Admins can upload to any storage bucket"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id IN ('avatars', 'people', 'projects', 'events', 'media') AND
-    (public.is_admin() OR auth.role() = 'authenticated')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can update any storage object" ON storage.objects;
 CREATE POLICY "Admins can update any storage object"
   ON storage.objects FOR UPDATE
   USING (
+    bucket_id IN ('avatars', 'people', 'projects', 'events', 'media') AND
+    public.is_admin()
+  )
+  WITH CHECK (
     bucket_id IN ('avatars', 'people', 'projects', 'events', 'media') AND
     public.is_admin()
   );

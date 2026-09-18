@@ -61,15 +61,7 @@ export interface MediaItem {
   caption?: string;
 }
 
-export type PersonRoleArea = 
-  | 'Operations' 
-  | 'Community' 
-  | 'Projects' 
-  | 'Research' 
-  | 'Open Source' 
-  | 'Technical' 
-  | 'Events' 
-  | 'Design';
+export type PersonRoleArea = string;
 
 export type CollageVisualSize = 'sm' | 'md' | 'lg' | 'featured';
 export type PersonCropRatio = 'square' | 'portrait' | 'landscape';
@@ -82,7 +74,7 @@ export interface StageCoordinates {
 export type CutoutArtStyle = 'natural' | 'paper' | 'sticker' | 'raw-cut' | 'shadowed';
 export type EdgeOutlineStyle = 'none' | 'thin-paper' | 'white' | 'palette-accent';
 export type LabelEditorialStyle = 'minimal' | 'editorial' | 'label' | 'side-note';
-export type StageBackgroundType = 'solid' | 'gradient' | 'paper' | 'palette';
+export type StageBackgroundType = 'garden' | 'solid' | 'gradient' | 'paper' | 'palette';
 export type StagePatternType = 'none' | 'dots' | 'grid' | 'grain';
 export type FocusScalePreset = 'subtle' | 'standard' | 'prominent';
 export type RecessionPreset = 'subtle' | 'medium' | 'strong';

@@ -13,6 +13,11 @@ AS $$
 DECLARE
   v_user_id UUID;
 BEGIN
+  -- Disallow calling this privileged function via RPC / client sessions
+  IF auth.uid() IS NOT NULL THEN
+    RAISE EXCEPTION 'Unauthorized: bootstrap_superadmin can only be executed via backend migrations or direct database administrator SQL.';
+  END IF;
+
   -- First ensure profile exists from auth.users if not already created
   INSERT INTO public.profiles (user_id, email, name, role, status)
   SELECT 
@@ -41,7 +46,9 @@ BEGIN
 END;
 $$;
 
--- 2. Restrict function execution permissions to fix Supabase Security Advisor warnings
+-- 2. Restrict function execution permissions to prevent unauthorized execution
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC, anon;
+
 REVOKE EXECUTE ON FUNCTION public.bootstrap_superadmin(TEXT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.bootstrap_superadmin(TEXT) TO service_role;
 
@@ -60,15 +67,15 @@ GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, service_role;
 REVOKE EXECUTE ON FUNCTION public.is_superadmin() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.is_superadmin() TO authenticated, service_role;
 
--- 3. Grant schema and table permissions to anon and authenticated roles
+-- 3. Grant schema, table, and sequence permissions to anon and authenticated roles
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
 
 -- 4. Execute elevation for both owner/administrator accounts if present
 DO $$

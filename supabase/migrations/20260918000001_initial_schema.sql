@@ -76,15 +76,23 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Prevent user_id mutation
-  IF NEW.user_id != OLD.user_id THEN
-    RAISE EXCEPTION 'Cannot modify profile user_id.';
-  END IF;
+  IF TG_OP = 'UPDATE' THEN
+    -- Prevent user_id mutation
+    IF NEW.user_id != OLD.user_id THEN
+      RAISE EXCEPTION 'Cannot modify profile user_id.';
+    END IF;
 
-  -- Only superadmins (or direct database admin / service role where auth.uid() is null) can modify role or status
-  IF (NEW.role != OLD.role OR NEW.status != OLD.status) THEN
+    -- Only superadmins (or direct database admin / service role where auth.uid() is null) can modify role or status
+    IF (NEW.role != OLD.role OR NEW.status != OLD.status) THEN
+      IF auth.uid() IS NOT NULL AND NOT public.is_superadmin() THEN
+        RAISE EXCEPTION 'Unauthorized: Only Super Admins are permitted to modify member roles or account status.';
+      END IF;
+    END IF;
+  ELSIF TG_OP = 'INSERT' THEN
+    -- Prevent self-promotion or status tampering during profile insertion by regular users
     IF auth.uid() IS NOT NULL AND NOT public.is_superadmin() THEN
-      RAISE EXCEPTION 'Unauthorized: Only Super Admins are permitted to modify member roles or account status.';
+      NEW.role := 'member';
+      NEW.status := 'ACTIVE';
     END IF;
   END IF;
 
@@ -95,7 +103,7 @@ $$;
 
 DROP TRIGGER IF EXISTS trg_enforce_profile_security ON public.profiles;
 CREATE TRIGGER trg_enforce_profile_security
-  BEFORE UPDATE ON public.profiles
+  BEFORE INSERT OR UPDATE ON public.profiles
   FOR EACH ROW
   EXECUTE FUNCTION public.enforce_profile_security();
 
@@ -156,6 +164,11 @@ AS $$
 DECLARE
   v_user_id UUID;
 BEGIN
+  -- Disallow calling this privileged function via RPC / client sessions
+  IF auth.uid() IS NOT NULL THEN
+    RAISE EXCEPTION 'Unauthorized: bootstrap_superadmin can only be executed via migrations or direct SQL.';
+  END IF;
+
   SELECT user_id INTO v_user_id FROM public.profiles WHERE lower(email) = lower(target_email);
 
   IF v_user_id IS NULL THEN
@@ -478,4 +491,26 @@ CREATE POLICY "Admins can view audit logs"
 DROP POLICY IF EXISTS "Authenticated users can insert audit logs" ON public.audit_logs;
 CREATE POLICY "Authenticated users can insert audit logs"
   ON public.audit_logs FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (auth.role() = 'authenticated');
+
+-- ----------------------------------------------------------------------------
+-- 8. FUNCTION ACCESS SECURITY (Restrict execution of privileged routines)
+-- ----------------------------------------------------------------------------
+REVOKE EXECUTE ON FUNCTION public.bootstrap_superadmin(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.bootstrap_superadmin(TEXT) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.handle_new_user() TO service_role;
+
+REVOKE EXECUTE ON FUNCTION public.enforce_profile_security() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.enforce_profile_security() TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.get_current_user_role() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_current_user_role() TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.is_superadmin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_superadmin() TO authenticated, service_role;
+

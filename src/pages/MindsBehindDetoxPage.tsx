@@ -20,7 +20,12 @@ export const MindsBehindDetoxPage: React.FC = () => {
   const filteredPeople =
     selectedDiscipline === 'ALL'
       ? publishedPeople
-      : publishedPeople.filter((p) => p.roleArea.toUpperCase() === selectedDiscipline.toUpperCase());
+      : publishedPeople.filter(
+          (p) =>
+            p.roleArea &&
+            (p.roleArea.toUpperCase() === selectedDiscipline.toUpperCase() ||
+              p.roleArea.toUpperCase().includes(selectedDiscipline.toUpperCase()))
+        );
 
   const disciplineFilterOptions = [
     { label: 'All Minds', value: 'ALL', color: '#235347' },

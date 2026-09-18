@@ -673,7 +673,7 @@ export const DEFAULT_COLLAGE_SETTINGS: CollageStageSettings = {
   leadText:
     'No executives, directors, or marketing figureheads. DETOX is conceived, engineered, and maintained entirely by undergraduate students who spend their evenings designing microkernels, routing PCBs, and running 36-hour weekend marathons.',
   statusText: 'Cohort 2026 • 9 Active Builders',
-  bgType: 'gradient',
+  bgType: 'garden',
   bgColor: '#235347',
   pattern: 'grid',
   hoverBehavior: {
