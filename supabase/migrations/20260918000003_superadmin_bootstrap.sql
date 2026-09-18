@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- DETOX Platform V2 — Super Admin Bootstrap & Verification Migration
 -- Migration: 20260918000003_superadmin_bootstrap.sql
 -- ============================================================================
@@ -41,13 +41,32 @@ BEGIN
 END;
 $$;
 
--- 2. Execute elevation for the project owner account.
--- REPLACE '__TARGET_OWNER_EMAIL__' with your registered email (e.g. 'ekanshgharde16@gmail.com'):
+-- 2. Restrict function execution permissions to fix Supabase Security Advisor warnings
+REVOKE EXECUTE ON FUNCTION public.bootstrap_superadmin(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.bootstrap_superadmin(TEXT) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.handle_new_user() TO service_role;
+
+REVOKE EXECUTE ON FUNCTION public.enforce_profile_security() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.enforce_profile_security() TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.get_current_user_role() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_current_user_role() TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.is_superadmin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_superadmin() TO authenticated, service_role;
+
+-- 3. Execute elevation for both owner/administrator accounts if present
 DO $$
-DECLARE
-  v_target_email TEXT := '__TARGET_OWNER_EMAIL__';
 BEGIN
-  IF v_target_email != '__TARGET_OWNER_EMAIL__' AND v_target_email != '' THEN
-    PERFORM public.bootstrap_superadmin(v_target_email);
+  IF EXISTS (SELECT 1 FROM auth.users WHERE lower(email) = 'ekanshgharde16@gmail.com') THEN
+    PERFORM public.bootstrap_superadmin('ekanshgharde16@gmail.com');
+  END IF;
+  IF EXISTS (SELECT 1 FROM auth.users WHERE lower(email) = 'patilesha387@gmail.com') THEN
+    PERFORM public.bootstrap_superadmin('patilesha387@gmail.com');
   END IF;
 END $$;
