@@ -142,7 +142,7 @@ export const CommunityPage: React.FC = () => {
       <div className="mb-16">
         <div className="border-b border-zinc-200 dark:border-zinc-800/80 pb-3 mb-6 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[#235347] font-semibold">Community Snapshot</span>
+            <span className="text-[#235347] dark:text-[#99CDD8] font-semibold">Community Snapshot</span>
             <span className="text-zinc-500">· Real builder data across cohorts</span>
           </div>
           <span className="text-[11px] text-zinc-500 hidden sm:inline">Updated weekly</span>
@@ -175,7 +175,7 @@ export const CommunityPage: React.FC = () => {
       <div className="mb-20">
         <div className="border-b border-zinc-200 dark:border-zinc-800/80 pb-4 mb-8 flex flex-wrap items-center justify-between text-xs gap-2">
           <div className="flex items-center gap-2">
-            <Sparkles size={14} className="text-[#235347]" />
+            <Sparkles size={14} className="text-[#235347] dark:text-[#38B2A2]" />
             <span className="text-zinc-950 dark:text-zinc-100 font-semibold font-display">In the Lab & on the Benches</span>
             <span className="text-zinc-500">· Visual moments from campus sessions</span>
           </div>
@@ -199,7 +199,7 @@ export const CommunityPage: React.FC = () => {
       <div className="mb-20">
         <div className="flex flex-wrap items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 pb-4 mb-8 text-xs gap-2">
           <div className="flex items-center gap-2">
-            <RotateCw size={14} className="text-[#235347] animate-spin" style={{ animationDuration: '14s' }} />
+            <RotateCw size={14} className="text-[#235347] dark:text-[#38B2A2] animate-spin" style={{ animationDuration: '14s' }} />
             <span className="text-zinc-950 dark:text-zinc-100 font-semibold font-display">The 5-Stage Cycle</span>
             <span className="text-zinc-500">· Learn → Build → Contribute → Grow → Community</span>
           </div>
@@ -218,7 +218,7 @@ export const CommunityPage: React.FC = () => {
                   isSelected
                     ? isLight
                       ? 'bg-[#faf8f5] border-[#235347] text-zinc-950 shadow-sm ring-1 ring-[#235347]/30'
-                      : 'bg-[#14161a] border-[#235347] text-white shadow-md ring-1 ring-[#235347]/50'
+                      : 'bg-[#14161a] border-[#38B2A2] text-white shadow-md ring-1 ring-[#38B2A2]/50'
                     : isLight
                       ? 'bg-[#edeae3] border-zinc-300/80 text-zinc-600 hover:border-zinc-400'
                       : 'bg-[#111215] border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
@@ -226,7 +226,7 @@ export const CommunityPage: React.FC = () => {
               >
                 <div className="flex items-center justify-between text-[9px] text-zinc-500 mb-1">
                   <span>{stage.step}</span>
-                  <span className="text-[#235347] font-bold">0{idx + 1}</span>
+                  <span className="text-[#235347] dark:text-[#38B2A2] font-bold">0{idx + 1}</span>
                 </div>
                 <div className="text-base font-bold font-sans tracking-tight">
                   {stage.verb}
@@ -246,7 +246,7 @@ export const CommunityPage: React.FC = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div className="lg:col-span-7 space-y-3">
-              <div className="text-xs text-[#235347] font-bold uppercase tracking-wider">
+              <div className="text-xs text-[#235347] dark:text-[#99CDD8] font-bold uppercase tracking-wider">
                 {activePhase.subtitle}
               </div>
               <h3 className={`text-xl sm:text-2xl font-bold font-sans ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
@@ -275,7 +275,7 @@ export const CommunityPage: React.FC = () => {
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold border-b border-zinc-200 dark:border-zinc-800 pb-1 mb-1">
                   Deliverable Artifact
                 </div>
-                <p className="font-sans text-xs text-[#235347] font-semibold leading-relaxed">
+                <p className="font-sans text-xs text-[#235347] dark:text-[#38B2A2] font-semibold leading-relaxed">
                   {activePhase.deliverable}
                 </p>
               </div>
@@ -331,7 +331,7 @@ export const CommunityPage: React.FC = () => {
         }`}
       >
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-xs text-[#235347] font-semibold uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-xs text-[#235347] dark:text-[#99CDD8] font-semibold uppercase tracking-wider">
             <KeyRound size={14} />
             <span>Internal Members Platform</span>
           </div>
@@ -345,7 +345,7 @@ export const CommunityPage: React.FC = () => {
 
         <Link
           to="/members"
-          className="px-5 py-2.5 bg-[#163B32] hover:bg-[#235347] text-white font-mono text-xs font-bold rounded-xs tracking-wider transition-colors shrink-0 flex items-center gap-2"
+          className="px-5 py-2.5 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 font-mono text-xs font-bold rounded-xs tracking-wider transition-colors shrink-0 flex items-center gap-2"
         >
           <span>ENTER MEMBERS PORTAL</span>
           <ArrowRight size={14} />

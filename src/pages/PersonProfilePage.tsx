@@ -100,8 +100,8 @@ export const PersonProfilePage: React.FC = () => {
     return (
       <PageContainer maxWidth="6xl">
         <div className="py-24 text-center space-y-4">
-          <div className="inline-block w-8 h-8 border-2 border-[#235347] border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-500 text-sm">Loading builder profile...</p>
+          <div className="inline-block w-8 h-8 border-2 border-[#235347] dark:border-[#38B2A2] border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">Loading builder profile...</p>
         </div>
       </PageContainer>
     );
@@ -112,14 +112,14 @@ export const PersonProfilePage: React.FC = () => {
     return (
       <PageContainer maxWidth="6xl">
         <div className="py-20 text-center space-y-4">
-          <h2 className="font-display text-3xl font-bold">Builder profile not found</h2>
-          <p className="text-zinc-500 text-sm">
+          <h2 className="font-display text-3xl font-bold text-zinc-950 dark:text-zinc-50">Builder profile not found</h2>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">
             The profile you are looking for may have moved or been updated.
           </p>
           <div className="pt-4">
             <Link
               to="/minds"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#235347] text-white text-xs font-semibold hover:bg-[#163B32] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#235347] dark:bg-[#38B2A2] text-white dark:text-zinc-950 text-xs font-semibold hover:bg-[#163B32] dark:hover:bg-[#4ecdc4] transition-colors"
             >
               <ArrowLeft size={14} />
               <span>Return to Minds Behind DETOX</span>
@@ -545,10 +545,10 @@ export const PersonProfilePage: React.FC = () => {
             <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                  <Layers size={14} className="text-[#235347]" />
+                  <Layers size={14} className="text-[#235347] dark:text-[#38B2A2]" />
                   <span>Projects Contributed To</span>
                 </div>
-                <Link to="/projects" className="text-xs text-[#235347] hover:underline">
+                <Link to="/projects" className="text-xs text-[#235347] dark:text-[#99CDD8] hover:underline">
                   All projects →
                 </Link>
               </div>
@@ -564,7 +564,7 @@ export const PersonProfilePage: React.FC = () => {
                     <div className="flex items-center justify-between text-[11px] mb-2">
                       <Tag label={prj.category} variant="green" />
                       {prj.metrics && (
-                        <span className="font-mono text-[10px] text-[#235347] font-semibold">
+                        <span className="font-mono text-[10px] text-[#235347] dark:text-[#38B2A2] font-semibold">
                           {prj.metrics.value}
                         </span>
                       )}
@@ -582,7 +582,7 @@ export const PersonProfilePage: React.FC = () => {
                           href={prj.gitUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[#235347] hover:underline"
+                          className="inline-flex items-center gap-1 text-[#235347] dark:text-[#99CDD8] hover:underline"
                         >
                           <span>Repository</span>
                           <ArrowUpRight size={11} />
@@ -599,7 +599,7 @@ export const PersonProfilePage: React.FC = () => {
           {linkedEvents.length > 0 && (
             <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                <Calendar size={14} className="text-[#235347]" />
+                <Calendar size={14} className="text-[#235347] dark:text-[#38B2A2]" />
                 <span>Workshops & Sprints Led / Attended</span>
               </div>
 
@@ -623,7 +623,7 @@ export const PersonProfilePage: React.FC = () => {
 
                     <Link
                       to="/events"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#235347] hover:underline shrink-0"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#235347] dark:text-[#99CDD8] hover:underline shrink-0"
                     >
                       <span>Event details</span>
                       <ArrowUpRight size={12} />

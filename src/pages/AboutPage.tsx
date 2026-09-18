@@ -89,7 +89,7 @@ export const AboutPage: React.FC = () => {
               DETOX is a student-led community where ideas become physical prototypes and low-level code. We build across systems software, embedded hardware, machine learning, and security.
             </p>
           </div>
-          <div className="pt-4 mt-4 border-t border-inherit text-xs text-[#235347] font-semibold">
+          <div className="pt-4 mt-4 border-t border-inherit text-xs text-[#235347] dark:text-[#38B2A2] font-semibold">
             Student Operated
           </div>
         </DossierCard>
@@ -104,7 +104,7 @@ export const AboutPage: React.FC = () => {
               Most student clubs are resume factories pushing commercial API wrappers. We exist because if you don’t understand how something works at layer N-1, you don't really know how it works.
             </p>
           </div>
-          <div className="pt-4 mt-4 border-t border-inherit text-xs text-[#235347] font-semibold">
+          <div className="pt-4 mt-4 border-t border-inherit text-xs text-[#235347] dark:text-[#38B2A2] font-semibold">
             Zero Marketing Slop
           </div>
         </DossierCard>
@@ -119,7 +119,7 @@ export const AboutPage: React.FC = () => {
               Respect is commanded by the quality of your code reviews and solder joints, not by titles. We evaluate people strictly by running code, working hardware, and honest peer mentorship.
             </p>
           </div>
-          <div className="pt-4 mt-4 border-t border-inherit text-xs text-[#235347] font-semibold">
+          <div className="pt-4 mt-4 border-t border-inherit text-xs text-[#235347] dark:text-[#38B2A2] font-semibold">
             Code Over Titles
           </div>
         </DossierCard>
@@ -129,8 +129,8 @@ export const AboutPage: React.FC = () => {
       <div className="mb-20">
         <div className="flex flex-wrap items-center justify-between border-b pb-4 mb-8 text-xs gap-2">
           <div className="flex items-center gap-2">
-            <Layers size={14} className="text-[#235347]" />
-            <span className="text-[#235347] font-bold uppercase tracking-wider">The Layer N-1 System Map</span>
+            <Layers size={14} className="text-[#235347] dark:text-[#38B2A2]" />
+            <span className="text-[#235347] dark:text-[#99CDD8] font-bold uppercase tracking-wider">The Layer N-1 System Map</span>
             <span className="text-zinc-500">Select a boundary to inspect</span>
           </div>
         </div>
@@ -207,7 +207,7 @@ export const AboutPage: React.FC = () => {
 
               <div className={`mt-6 pt-3 border-t flex items-center justify-between font-mono text-[10px] text-zinc-500 ${isLight ? 'border-zinc-300' : 'border-zinc-800'}`}>
                 <span>VERIFICATION: DATA OVER PROMISES</span>
-                <span className="text-[#235347] font-bold">100% REPRODUCIBLE</span>
+                <span className="text-[#235347] dark:text-[#38B2A2] font-bold">100% REPRODUCIBLE</span>
               </div>
             </DossierCard>
           </div>
@@ -221,7 +221,7 @@ export const AboutPage: React.FC = () => {
         }`}
       >
         <div>
-          <div className="text-xs text-[#235347] font-semibold uppercase tracking-wider">People Behind the Benches</div>
+          <div className="text-xs text-[#235347] dark:text-[#99CDD8] font-semibold uppercase tracking-wider">People Behind the Benches</div>
           <h4 className={`text-lg font-bold font-sans ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
             Meet the students operating the benches.
           </h4>
@@ -229,7 +229,7 @@ export const AboutPage: React.FC = () => {
 
         <Link
           to="/minds"
-          className="px-4 py-2 bg-[#163B32] hover:bg-[#235347] text-white font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center gap-2 shrink-0"
+          className="px-4 py-2 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center gap-2 shrink-0"
         >
           <span>Meet the Minds</span>
           <ArrowRight size={13} />

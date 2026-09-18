@@ -43,8 +43,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
           {/* Main Statement Header */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end mb-16">
             <div className="lg:col-span-8 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border border-[#235347]/30 bg-[#235347]/10 text-[#235347]">
-                <span className="w-2 h-2 rounded-full bg-[#235347]" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border border-[#235347]/30 bg-[#235347]/10 text-[#235347] dark:text-[#99CDD8]">
+                <span className="w-2 h-2 rounded-full bg-[#235347] dark:bg-[#38B2A2]" />
                 <span>Student Engineering Collective</span>
               </div>
               <h2 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50 leading-[1.05]">
@@ -58,7 +58,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
               <div className="flex items-center gap-4 text-xs font-semibold">
                 <Link
                   to="/about"
-                  className="inline-flex items-center gap-1.5 text-[#235347] hover:underline"
+                  className="inline-flex items-center gap-1.5 text-[#235347] dark:text-[#99CDD8] hover:underline"
                 >
                   <span>Read our founding manifesto</span>
                   <ArrowRight size={13} />
@@ -255,7 +255,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
           {/* Section Title & Filter */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-[#235347] mb-2">
+              <div className="text-xs font-bold uppercase tracking-widest text-[#235347] dark:text-[#99CDD8] mb-2">
                 Project Exhibition
               </div>
               <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
@@ -264,7 +264,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
             </div>
             <Link
               to="/projects"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#235347] transition-colors self-start sm:self-auto"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-[#235347] transition-colors self-start sm:self-auto"
             >
               <span>View all {publishedProjects.length} projects</span>
               <ArrowRight size={13} />
@@ -316,13 +316,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
 
                   <div className="pt-4 border-t border-inherit flex items-center justify-between">
                     <div className="text-xs text-zinc-500">
-                      Benchmark: <span className="font-mono font-bold text-[#235347]">{publishedProjects[0].metrics?.value}</span>
+                      Benchmark: <span className="font-mono font-bold text-[#235347] dark:text-[#38B2A2]">{publishedProjects[0].metrics?.value}</span>
                     </div>
                     <a
                       href={publishedProjects[0].gitUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#235347] hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#235347] dark:text-[#99CDD8] hover:underline"
                     >
                       <span>Open Repository</span>
                       <ExternalLink size={12} />
@@ -405,8 +405,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
         <div className="max-w-7xl mx-auto space-y-14">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-6 border-b border-zinc-300 dark:border-zinc-800 gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border border-[#235347]/30 bg-[#235347]/10 text-[#235347] mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#235347]" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border border-[#235347]/30 bg-[#235347]/10 text-[#235347] dark:text-[#99CDD8] mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#235347] dark:bg-[#38B2A2]" />
                 <span>Active Student Collective</span>
               </div>
               <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
@@ -439,7 +439,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
             <div className="lg:col-span-7">
-              <div className="text-xs font-bold uppercase tracking-widest text-[#235347] mb-2">
+              <div className="text-xs font-bold uppercase tracking-widest text-[#235347] dark:text-[#99CDD8] mb-2">
                 Community Pulse
               </div>
               <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
@@ -513,7 +513,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-6 border-b border-zinc-300 dark:border-zinc-800 gap-4">
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-[#235347] mb-2">
+              <div className="text-xs font-bold uppercase tracking-widest text-[#235347] dark:text-[#99CDD8] mb-2">
                 Timeline
               </div>
               <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
@@ -522,7 +522,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
             </div>
             <Link
               to="/events"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#235347] transition-colors self-start sm:self-auto"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-[#235347] transition-colors self-start sm:self-auto"
             >
               <span>View full calendar & archive</span>
               <ArrowRight size={13} />
@@ -599,7 +599,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
       {/* ========================================================================= */}
       <section className="relative py-28 px-6 sm:px-12 lg:px-20 border-t border-zinc-200 dark:border-zinc-800 transition-colors duration-700">
         <div className="max-w-5xl mx-auto text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border border-[#235347]/30 bg-[#235347]/10 text-[#235347]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border border-[#235347]/30 bg-[#235347]/10 text-[#235347] dark:text-[#99CDD8]">
             <span>Get Involved</span>
           </div>
 
@@ -614,7 +614,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
           {/* Pathways Row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left pt-6">
             <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
-              <div className="text-xs font-bold text-[#235347] uppercase tracking-wider mb-1">
+              <div className="text-xs font-bold text-[#235347] dark:text-[#38B2A2] uppercase tracking-wider mb-1">
                 Students
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed">
@@ -622,7 +622,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
               </p>
             </div>
             <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
-              <div className="text-xs font-bold text-[#235347] uppercase tracking-wider mb-1">
+              <div className="text-xs font-bold text-[#235347] dark:text-[#38B2A2] uppercase tracking-wider mb-1">
                 Institutions
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed">
@@ -630,7 +630,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
               </p>
             </div>
             <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
-              <div className="text-xs font-bold text-[#235347] uppercase tracking-wider mb-1">
+              <div className="text-xs font-bold text-[#235347] dark:text-[#38B2A2] uppercase tracking-wider mb-1">
                 Industry
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed">
@@ -638,7 +638,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectArtifact }) => {
               </p>
             </div>
             <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
-              <div className="text-xs font-bold text-[#235347] uppercase tracking-wider mb-1">
+              <div className="text-xs font-bold text-[#235347] dark:text-[#38B2A2] uppercase tracking-wider mb-1">
                 Open Source
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed">

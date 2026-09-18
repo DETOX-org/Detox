@@ -76,11 +76,11 @@ export const Footer: React.FC = () => {
                 Explore
               </div>
               <div className="flex flex-col space-y-2 text-zinc-600 dark:text-zinc-400">
-                <Link to="/about" className="hover:text-[#235347] transition-colors">About DETOX</Link>
-                <Link to="/projects" className="hover:text-[#235347] transition-colors">Projects Archive</Link>
-                <Link to="/community" className="hover:text-[#235347] transition-colors">Living Community</Link>
-                <Link to="/events" className="hover:text-[#235347] transition-colors">Event Timeline</Link>
-                <Link to="/minds" className="hover:text-[#235347] transition-colors">Minds Behind DETOX</Link>
+                <Link to="/about" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">About DETOX</Link>
+                <Link to="/projects" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Projects Archive</Link>
+                <Link to="/community" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Living Community</Link>
+                <Link to="/events" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Event Timeline</Link>
+                <Link to="/minds" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Minds Behind DETOX</Link>
               </div>
             </div>
 
@@ -90,10 +90,10 @@ export const Footer: React.FC = () => {
                 Get Involved
               </div>
               <div className="flex flex-col space-y-2 text-zinc-600 dark:text-zinc-400">
-                <Link to="/collaborate" className="hover:text-[#235347] transition-colors">Build With Us</Link>
-                <Link to="/events" className="hover:text-[#235347] transition-colors">Attend Next Sprint</Link>
-                <Link to="/members" className="hover:text-[#235347] transition-colors">Member Portal</Link>
-                <Link to="/admin" className="hover:text-[#235347] transition-colors">Admin Gateway</Link>
+                <Link to="/collaborate" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Build With Us</Link>
+                <Link to="/events" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Attend Next Sprint</Link>
+                <Link to="/members" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Member Portal</Link>
+                <Link to="/admin" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Admin Gateway</Link>
               </div>
             </div>
 
@@ -108,7 +108,7 @@ export const Footer: React.FC = () => {
               <div className="pt-1">
                 <Link
                   to="/collaborate"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#235347] hover:underline"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#235347] dark:text-[#99CDD8] hover:underline"
                 >
                   <span>Join the collective</span>
                   <ArrowUpRight size={12} />
@@ -166,9 +166,9 @@ export const Footer: React.FC = () => {
             © {new Date().getFullYear()} DETOX Student Engineering Collective. Open Source & Open Hardware.
           </div>
           <div className="flex items-center gap-4 text-xs">
-            <Link to="/about" className="hover:text-[#235347] transition-colors">Founding Statement</Link>
+            <Link to="/about" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Founding Statement</Link>
             <span>•</span>
-            <Link to="/collaborate" className="hover:text-[#235347] transition-colors">Co-Building Tracks</Link>
+            <Link to="/collaborate" className="hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors">Co-Building Tracks</Link>
           </div>
         </div>
       </div>

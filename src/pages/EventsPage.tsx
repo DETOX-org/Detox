@@ -59,7 +59,7 @@ export const EventsPage: React.FC = () => {
         </div>
 
         <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-500">
-          <Camera size={13} className="text-[#235347]" />
+          <Camera size={13} className="text-[#235347] dark:text-[#38B2A2]" />
           <span>Photo-Verified Records</span>
         </div>
       </div>
@@ -167,7 +167,7 @@ export const EventsPage: React.FC = () => {
                                 : 'bg-[#0e0f12] border-zinc-800 text-zinc-300'
                             }`}
                           >
-                            <CheckCircle2 size={11} className="text-[#235347]" />
+                            <CheckCircle2 size={11} className="text-[#235347] dark:text-[#38B2A2]" />
                             <span>{del}</span>
                           </div>
                         ))}
@@ -181,7 +181,7 @@ export const EventsPage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-[10px] text-zinc-500">
                       <span>RECORD STATUS:</span>
-                      <span className="font-bold text-[#235347]">{evt.status}</span>
+                      <span className="font-bold text-[#235347] dark:text-[#38B2A2]">{evt.status}</span>
                     </div>
 
                     {evt.capacity && (
@@ -195,7 +195,7 @@ export const EventsPage: React.FC = () => {
                   {evt.isUpcoming ? (
                     <a
                       href={`mailto:collective@detox.build?subject=Event%20RSVP:%20${encodeURIComponent(evt.title)}`}
-                      className="w-full py-2 bg-[#163B32] hover:bg-[#235347] text-white text-center font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-1.5"
+                      className="w-full py-2 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 text-center font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-1.5"
                     >
                       <span>RESERVE BENCH</span>
                       <ArrowUpRight size={13} />
@@ -204,7 +204,7 @@ export const EventsPage: React.FC = () => {
                     <div className="space-y-1.5 text-[11px]">
                       <div className="text-[10px] text-zinc-500 uppercase font-semibold">PRESERVED ARTIFACTS:</div>
                       {evt.resources?.map((res, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 text-[#235347] font-semibold hover:underline cursor-pointer">
+                        <div key={idx} className="flex items-center gap-1.5 text-[#235347] dark:text-[#99CDD8] font-semibold hover:underline cursor-pointer">
                           <FileText size={12} />
                           <span>{res.label}</span>
                         </div>

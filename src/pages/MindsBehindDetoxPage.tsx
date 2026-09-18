@@ -54,7 +54,7 @@ export const MindsBehindDetoxPage: React.FC = () => {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-4 mb-6">
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-            <Compass size={14} className="text-[#235347]" />
+            <Compass size={14} className="text-[#235347] dark:text-[#38B2A2]" />
             <span>Interactive Collective Collage</span>
             <span className="text-zinc-500 font-normal">· Hover to focus, click for individual story</span>
           </div>
@@ -110,7 +110,7 @@ export const MindsBehindDetoxPage: React.FC = () => {
         }`}
       >
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-xs text-[#235347] font-semibold uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-xs text-[#235347] dark:text-[#99CDD8] font-semibold uppercase tracking-wider">
             <Sparkles size={14} />
             <span>No Résumés · No Corporate Interviews</span>
           </div>
@@ -124,7 +124,7 @@ export const MindsBehindDetoxPage: React.FC = () => {
 
         <Link
           to="/collaborate"
-          className="px-5 py-2.5 bg-[#163B32] hover:bg-[#235347] text-white font-sans text-xs font-semibold rounded-full tracking-wider transition-colors shrink-0 flex items-center gap-2 shadow-xs"
+          className="px-5 py-2.5 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 font-sans text-xs font-semibold rounded-full tracking-wider transition-colors shrink-0 flex items-center gap-2 shadow-xs"
         >
           <span>BUILD WITH US</span>
           <ArrowRight size={14} />

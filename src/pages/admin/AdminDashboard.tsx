@@ -1008,7 +1008,7 @@ export const AdminDashboard: React.FC = () => {
                     className={`px-2 py-1 rounded-xs font-bold ${
                       statusFilter === st
                         ? 'bg-[#235347] text-white'
-                        : 'text-zinc-500 hover:text-zinc-300'
+                        : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
                     }`}
                   >
                     {st}
@@ -1021,7 +1021,7 @@ export const AdminDashboard: React.FC = () => {
             {contentSubTab === 'PROJECTS' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="font-bold text-[#235347]">
+                  <div className="font-bold text-[#235347] dark:text-[#99CDD8]">
                     // PROJECTS ({projects.length})
                   </div>
                   <button
@@ -1336,7 +1336,7 @@ export const AdminDashboard: React.FC = () => {
                       className={`px-2.5 py-1 rounded-xs font-bold ${
                         selectedMediaCategory === cat
                           ? 'bg-[#163B32] text-white'
-                          : 'text-zinc-500 hover:text-zinc-300'
+                          : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
                       }`}
                     >
                       {cat}
@@ -1566,7 +1566,7 @@ export const AdminDashboard: React.FC = () => {
                                       });
                                     }
                                   }}
-                                  className="bg-zinc-800 text-zinc-200 py-1 px-2 rounded border border-zinc-700 text-[10px] focus:outline-hidden focus:border-[#235347]"
+                                  className="bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 py-1 px-2 rounded border border-zinc-300 dark:border-zinc-700 text-[10px] focus:outline-hidden focus:border-[#235347]"
                                 >
                                   <option value="member">Set: Member</option>
                                   <option value="admin">Set: Admin</option>
@@ -1588,7 +1588,7 @@ export const AdminDashboard: React.FC = () => {
                                       });
                                     }
                                   }}
-                                  className="bg-zinc-800 text-zinc-200 py-1 px-2 rounded border border-zinc-700 text-[10px] focus:outline-hidden focus:border-[#235347]"
+                                  className="bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 py-1 px-2 rounded border border-zinc-300 dark:border-zinc-700 text-[10px] focus:outline-hidden focus:border-[#235347]"
                                 >
                                   <option value="ACTIVE">ACTIVE</option>
                                   <option value="PENDING">PENDING</option>
@@ -1799,7 +1799,7 @@ export const AdminDashboard: React.FC = () => {
                   value={projForm.title}
                   onChange={(e) => setProjForm({ ...projForm, title: e.target.value })}
                   placeholder="e.g. detox-net: Zero-Copy Packet Sockets"
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -1809,7 +1809,7 @@ export const AdminDashboard: React.FC = () => {
                   <select
                     value={projForm.category}
                     onChange={(e) => setProjForm({ ...projForm, category: e.target.value as any })}
-                    className="w-full p-2 rounded-xs border bg-transparent"
+                    className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                   >
                     <option value="STUDENT">STUDENT</option>
                     <option value="RESEARCH">RESEARCH</option>
@@ -1823,7 +1823,7 @@ export const AdminDashboard: React.FC = () => {
                   <select
                     value={projForm.status}
                     onChange={(e) => setProjForm({ ...projForm, status: e.target.value as any })}
-                    className="w-full p-2 rounded-xs border bg-transparent font-bold text-[#235347]"
+                    className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-[#235347] dark:text-[#38B2A2]"
                   >
                     <option value="DRAFT">DRAFT</option>
                     <option value="REVIEW">REVIEW</option>
@@ -1840,7 +1840,7 @@ export const AdminDashboard: React.FC = () => {
                   value={projForm.description}
                   onChange={(e) => setProjForm({ ...projForm, description: e.target.value })}
                   placeholder="Brief factual summary of what is built."
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -1851,7 +1851,7 @@ export const AdminDashboard: React.FC = () => {
                   value={projForm.contributors}
                   onChange={(e) => setProjForm({ ...projForm, contributors: e.target.value })}
                   placeholder="Dev P., Sneha T."
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -1862,7 +1862,7 @@ export const AdminDashboard: React.FC = () => {
                   value={projForm.specs}
                   onChange={(e) => setProjForm({ ...projForm, specs: e.target.value })}
                   placeholder="C11, 4-Layer PCB, 10Gbps"
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -1933,7 +1933,7 @@ export const AdminDashboard: React.FC = () => {
                   value={eventForm.title}
                   onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
                   placeholder="e.g. RISC-V Custom Instructions Bring-Up"
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -1943,7 +1943,7 @@ export const AdminDashboard: React.FC = () => {
                   <select
                     value={eventForm.category}
                     onChange={(e) => setEventForm({ ...eventForm, category: e.target.value as any })}
-                    className="w-full p-2 rounded-xs border bg-transparent"
+                    className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                   >
                     <option value="WORKSHOP">WORKSHOP</option>
                     <option value="PAPER SALON">PAPER SALON</option>
@@ -1958,7 +1958,7 @@ export const AdminDashboard: React.FC = () => {
                     <select
                       value={eventForm.status}
                       onChange={(e) => setEventForm({ ...eventForm, status: e.target.value as any })}
-                      className="w-full p-2 rounded-xs border bg-transparent font-bold text-[#235347]"
+                      className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-[#235347] dark:text-[#38B2A2]"
                     >
                       <option value="DRAFT">DRAFT</option>
                       <option value="REVIEW">REVIEW</option>
@@ -1976,7 +1976,7 @@ export const AdminDashboard: React.FC = () => {
                     value={eventForm.date}
                     onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
                     placeholder="OCTOBER 25, 2026"
-                    className="w-full p-2 rounded-xs border bg-transparent"
+                    className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                   />
                 </div>
                 <div>
@@ -1984,7 +1984,7 @@ export const AdminDashboard: React.FC = () => {
                   <select
                     value={eventForm.isUpcoming ? 'UPCOMING' : 'ARCHIVE'}
                     onChange={(e) => setEventForm({ ...eventForm, isUpcoming: e.target.value === 'UPCOMING' })}
-                    className="w-full p-2 rounded-xs border bg-transparent"
+                    className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                   >
                     <option value="UPCOMING">UPCOMING SCHEDULE</option>
                     <option value="ARCHIVE">ARCHIVE / WHAT WE BUILT</option>
@@ -2000,7 +2000,7 @@ export const AdminDashboard: React.FC = () => {
                   value={eventForm.description}
                   onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
                   placeholder="Crisp factual description of the hands-on event."
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -2011,7 +2011,7 @@ export const AdminDashboard: React.FC = () => {
                   value={eventForm.deliverables}
                   onChange={(e) => setEventForm({ ...eventForm, deliverables: e.target.value })}
                   placeholder="Assembled board, Verified test suite"
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -2707,7 +2707,7 @@ export const AdminDashboard: React.FC = () => {
                   value={accForm.title}
                   onChange={(e) => setAccForm({ ...accForm, title: e.target.value })}
                   placeholder="e.g. FPGA Ethernet Core Verified on Hardware"
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -2717,7 +2717,7 @@ export const AdminDashboard: React.FC = () => {
                   <select
                     value={accForm.category}
                     onChange={(e) => setAccForm({ ...accForm, category: e.target.value as any })}
-                    className="w-full p-2 rounded-xs border bg-transparent"
+                    className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                   >
                     <option value="MILESTONE">MILESTONE</option>
                     <option value="AWARD">AWARD</option>
@@ -2732,7 +2732,7 @@ export const AdminDashboard: React.FC = () => {
                     value={accForm.date}
                     onChange={(e) => setAccForm({ ...accForm, date: e.target.value })}
                     placeholder="SEPTEMBER 2026"
-                    className="w-full p-2 rounded-xs border bg-transparent"
+                    className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                   />
                 </div>
               </div>
@@ -2745,7 +2745,7 @@ export const AdminDashboard: React.FC = () => {
                   value={accForm.description}
                   onChange={(e) => setAccForm({ ...accForm, description: e.target.value })}
                   placeholder="What was physically achieved or proven."
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -2756,7 +2756,7 @@ export const AdminDashboard: React.FC = () => {
                   value={accForm.impact}
                   onChange={(e) => setAccForm({ ...accForm, impact: e.target.value })}
                   placeholder="100% packet transmission at line rate."
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -2789,7 +2789,7 @@ export const AdminDashboard: React.FC = () => {
             }`}
           >
             <div className="flex items-center justify-between border-b pb-2">
-              <span className="font-bold text-[#235347]">// DISPATCH ANNOUNCEMENT</span>
+              <span className="font-bold text-[#235347] dark:text-[#99CDD8]">// DISPATCH ANNOUNCEMENT</span>
               <button onClick={() => setShowAnnouncementModal(false)}>
                 <X size={14} />
               </button>
@@ -2818,7 +2818,7 @@ export const AdminDashboard: React.FC = () => {
                   value={annForm.title}
                   onChange={(e) => setAnnForm({ ...annForm, title: e.target.value })}
                   placeholder="e.g. New Oscilloscope Arrived in Lab 2"
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 
@@ -2827,7 +2827,7 @@ export const AdminDashboard: React.FC = () => {
                 <select
                   value={annForm.type}
                   onChange={(e) => setAnnForm({ ...annForm, type: e.target.value as any })}
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                 >
                   <option value="INFO">INFO</option>
                   <option value="RELEASE">RELEASE</option>
@@ -2843,7 +2843,7 @@ export const AdminDashboard: React.FC = () => {
                   value={annForm.content}
                   onChange={(e) => setAnnForm({ ...annForm, content: e.target.value })}
                   placeholder="Concise operational details."
-                  className="w-full p-2 rounded-xs border bg-transparent"
+                  className="w-full p-2 rounded-xs border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 />
               </div>
 

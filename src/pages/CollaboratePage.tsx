@@ -203,14 +203,14 @@ export const CollaboratePage: React.FC = () => {
                   isLight ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-800' : 'bg-[#0e0f12] border-zinc-800 text-zinc-300'
                 }`}
               >
-                <div className="flex items-center gap-1.5 text-xs text-[#235347] uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                <div className="flex items-center gap-1.5 text-xs text-[#235347] dark:text-[#99CDD8] uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
                   <Hammer size={12} />
                   <span>What We Can Build Together</span>
                 </div>
                 <div className="space-y-2 font-sans text-xs">
                   {activeTrack.buildTogether.map((item, idx) => (
                     <div key={idx} className="flex items-start gap-2">
-                      <span className="text-[#235347] font-bold text-xs pt-0.5">•</span>
+                      <span className="text-[#235347] dark:text-[#38B2A2] font-bold text-xs pt-0.5">•</span>
                       <span className="leading-relaxed">{item}</span>
                     </div>
                   ))}
@@ -223,14 +223,14 @@ export const CollaboratePage: React.FC = () => {
                   isLight ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-800' : 'bg-[#0e0f12] border-zinc-800 text-zinc-300'
                 }`}
               >
-                <div className="flex items-center gap-1.5 text-xs text-[#235347] uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                <div className="flex items-center gap-1.5 text-xs text-[#235347] dark:text-[#99CDD8] uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
                   <Wrench size={12} />
                   <span>What DETOX Provides</span>
                 </div>
                 <div className="space-y-2 font-sans text-xs">
                   {activeTrack.detoxProvides.map((item, idx) => (
                     <div key={idx} className="flex items-start gap-2">
-                      <Check size={13} className="text-[#235347] shrink-0 mt-0.5" />
+                      <Check size={13} className="text-[#235347] dark:text-[#38B2A2] shrink-0 mt-0.5" />
                       <span className="leading-relaxed font-medium">{item}</span>
                     </div>
                   ))}
@@ -243,7 +243,7 @@ export const CollaboratePage: React.FC = () => {
                   isLight ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-800' : 'bg-[#0e0f12] border-zinc-800 text-zinc-300'
                 }`}
               >
-                <div className="flex items-center gap-1.5 text-xs text-[#235347] uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                <div className="flex items-center gap-1.5 text-xs text-[#235347] dark:text-[#99CDD8] uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
                   <ShieldAlert size={12} />
                   <span>What We Expect</span>
                 </div>
@@ -261,12 +261,12 @@ export const CollaboratePage: React.FC = () => {
             {/* Direct Contact Button */}
             <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
               <div className="text-zinc-500 text-xs">
-                Direct Track Contact: <span className="text-[#235347] font-semibold">{activeTrack.contactEmail}</span>
+                Direct Track Contact: <span className="text-[#235347] dark:text-[#99CDD8] font-semibold">{activeTrack.contactEmail}</span>
               </div>
 
               <a
                 href={`mailto:${activeTrack.contactEmail}?subject=Co-Building%20Proposal%20via%20DETOX`}
-                className="px-5 py-2.5 bg-[#163B32] hover:bg-[#235347] text-white font-sans text-xs font-semibold rounded-xs tracking-wider transition-colors flex items-center gap-2 shrink-0"
+                className="px-5 py-2.5 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 font-sans text-xs font-semibold rounded-xs tracking-wider transition-colors flex items-center gap-2 shrink-0"
               >
                 <span>Submit {activeTrack.name} Proposal</span>
                 <ArrowUpRight size={13} />
@@ -279,7 +279,7 @@ export const CollaboratePage: React.FC = () => {
       {/* The Co-Building Covenant (3 Concise Principles) */}
       <div className="mb-20">
         <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-8 text-xs flex items-center justify-between">
-          <span className="text-[#235347] font-semibold">The Co-Building Principles</span>
+          <span className="text-[#235347] dark:text-[#99CDD8] font-semibold">The Co-Building Principles</span>
           <span className="text-zinc-500">Non-negotiable values</span>
         </div>
 
@@ -289,7 +289,7 @@ export const CollaboratePage: React.FC = () => {
               isLight ? 'bg-[#faf8f5] border-zinc-300 text-zinc-800' : 'bg-[#14161a] border-zinc-800 text-zinc-300'
             }`}
           >
-            <div className="text-xs text-[#235347] font-semibold mb-2">01 · Substance Over Logos</div>
+            <div className="text-xs text-[#235347] dark:text-[#38B2A2] font-semibold mb-2">01 · Substance Over Logos</div>
             <h3 className={`font-sans font-bold text-base mb-2 ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
               No Marketing Vanity
             </h3>
@@ -303,7 +303,7 @@ export const CollaboratePage: React.FC = () => {
               isLight ? 'bg-[#faf8f5] border-zinc-300 text-zinc-800' : 'bg-[#14161a] border-zinc-800 text-zinc-300'
             }`}
           >
-            <div className="text-xs text-[#235347] font-semibold mb-2">02 · Student Ownership</div>
+            <div className="text-xs text-[#235347] dark:text-[#38B2A2] font-semibold mb-2">02 · Student Ownership</div>
             <h3 className={`font-sans font-bold text-base mb-2 ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
               Permissive Open Source
             </h3>
@@ -317,7 +317,7 @@ export const CollaboratePage: React.FC = () => {
               isLight ? 'bg-[#faf8f5] border-zinc-300 text-zinc-800' : 'bg-[#14161a] border-zinc-800 text-zinc-300'
             }`}
           >
-            <div className="text-xs text-[#235347] font-semibold mb-2">03 · Engineer to Engineer</div>
+            <div className="text-xs text-[#235347] dark:text-[#38B2A2] font-semibold mb-2">03 · Engineer to Engineer</div>
             <h3 className={`font-sans font-bold text-base mb-2 ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
               Direct Technical Discourse
             </h3>

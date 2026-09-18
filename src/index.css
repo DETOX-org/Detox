@@ -93,3 +93,33 @@ body {
   font-family: var(--font-sans);
 }
 
+/* System-wide color-scheme integration for native inputs, select options, and scrollbars */
+html.dark {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+/* Native form controls & select options contrast consistency */
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #71717a;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #a1a1aa;
+}
+
+html.dark option {
+  background-color: #18181b;
+  color: #f4f4f5;
+}
+
+html.light option {
+  background-color: #ffffff;
+  color: #18181b;
+}
+

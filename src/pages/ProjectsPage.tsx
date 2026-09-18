@@ -162,7 +162,7 @@ export const ProjectsPage: React.FC = () => {
                             : 'bg-[#0e0f12] border-zinc-800 text-zinc-300'
                         }`}
                       >
-                        <CheckCircle size={10} className="text-[#235347]" />
+                        <CheckCircle size={10} className="text-[#235347] dark:text-[#38B2A2]" />
                         <span>{spec}</span>
                       </span>
                     ))}
@@ -177,7 +177,7 @@ export const ProjectsPage: React.FC = () => {
                 }`}
               >
                 <div>
-                  BUILDERS: <span className="font-semibold text-zinc-300">{proj.contributors.join(', ')}</span>
+                  BUILDERS: <span className={`font-semibold ${isLight ? 'text-zinc-800' : 'text-zinc-200'}`}>{proj.contributors.join(', ')}</span>
                 </div>
 
                 {proj.gitUrl && (
@@ -185,7 +185,7 @@ export const ProjectsPage: React.FC = () => {
                     href={proj.gitUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-[#235347] font-bold hover:underline"
+                    className="flex items-center gap-1 text-[#235347] dark:text-[#99CDD8] font-bold hover:underline"
                   >
                     <Code2 size={12} />
                     <span>GIT REPO</span>
