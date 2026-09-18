@@ -140,11 +140,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSupabaseConfigured) {
       return { error: new Error('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.') };
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error };
-    await refreshProfile();
+    if (data?.user) {
+      setUser(data.user);
+      setSession(data.session);
+      const prof = await fetchProfile(data.user.id, data.user.email, data.user.user_metadata);
+      setProfile(prof);
+    }
     return { error: null };
-  }, [refreshProfile]);
+  }, [fetchProfile]);
 
   const signUp = useCallback(async (email: string, password: string, name: string, username?: string) => {
     if (!isSupabaseConfigured) {
@@ -162,8 +167,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
     if (error) return { error, user: null };
+    if (data?.user) {
+      setUser(data.user);
+      setSession(data.session);
+      const prof = await fetchProfile(data.user.id, data.user.email, data.user.user_metadata);
+      setProfile(prof);
+    }
     return { error: null, user: data.user };
-  }, []);
+  }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
     if (!isSupabaseConfigured) {
