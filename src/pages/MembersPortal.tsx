@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PageContainer, SectionHeader, DossierCard } from '../design-system/primitives';
 import { useTheme } from '../ThemeContext';
-import { KeyRound, ArrowRight, BookOpen, Hammer, GitPullRequest, TrendingUp, CheckCircle, ShieldAlert, User, UserPlus, LogOut, Edit3, Save, Check, AlertTriangle } from 'lucide-react';
+import { KeyRound, ArrowRight, BookOpen, Hammer, GitPullRequest, TrendingUp, CheckCircle, ShieldAlert, User, UserPlus, LogOut, Edit3, Save, Check, AlertTriangle, Lock } from 'lucide-react';
 import { Link } from '../router';
 import { useCms } from '../cms/CmsContext';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,6 @@ export const MembersPortal: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,10 +29,9 @@ export const MembersPortal: React.FC = () => {
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
   const handleStartEdit = () => {
-    if (!profile) return;
-    setEditName(profile.name || '');
-    setEditBio(profile.bio || '');
-    setEditSkills((profile.skills || []).join(', '));
+    setEditName(profile?.name || user?.email?.split('@')[0] || '');
+    setEditBio(profile?.bio || '');
+    setEditSkills((profile?.skills || []).join(', '));
     setIsEditingProfile(true);
     setProfileSaveSuccess(false);
   };
@@ -80,7 +78,7 @@ export const MembersPortal: React.FC = () => {
           setIsSubmitting(false);
           return;
         }
-        const res = await signUp(email, password, name, username);
+        const res = await signUp(email, password, name);
         if (res.error) {
           setAuthError(res.error.message);
         } else {
@@ -211,46 +209,49 @@ export const MembersPortal: React.FC = () => {
 
       {/* Authentication / Dashboard Section */}
       {!user ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-4xl mx-auto mb-20">
           <div className="lg:col-span-5 space-y-4">
-            <h3 className={`text-xl sm:text-2xl font-bold font-sans ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
-              Supabase Member Console
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-[#235347]/10 text-[#235347] dark:text-[#99CDD8]">
+              <Lock size={12} />
+              <span>MEMBERS AREA</span>
+            </div>
+            <h3 className={`text-2xl sm:text-3xl font-bold font-sans tracking-tight ${isLight ? 'text-zinc-950' : 'text-zinc-100'}`}>
+              Join the DETOX Builder Community.
             </h3>
-            <p className={`font-sans text-xs sm:text-sm leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-400'}`}>
-              Access to hardware bench reservations, peer pull requests, and internal working group repositories is secured by genuine Supabase Authentication and database Row Level Security.
+            <p className={`font-sans text-sm leading-relaxed ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
+              Sign in or create an account to access project collaboration tracks, peer code reviews, and lab bench reservations.
             </p>
 
-            <div
-              className={`p-4 rounded-xs border font-mono text-[11px] space-y-2 transition-colors ${
-                isLight ? 'bg-[#faf8f5] border-zinc-300 text-zinc-800' : 'bg-[#14161a] border-zinc-800 text-zinc-300'
-              }`}
-            >
-              <div className="text-[#235347] font-bold">// AUTHENTICATION DISCIPLINE:</div>
-              <ul className="list-disc list-inside space-y-1 text-[10px] text-zinc-500">
-                <li>Server-side RLS enforcement active</li>
-                <li>New accounts default to Member role</li>
-                <li>Roles managed exclusively by database policies</li>
+            <div className={`p-4 rounded-xl border text-xs space-y-2.5 ${isLight ? 'bg-zinc-50 border-zinc-200 text-zinc-700' : 'bg-zinc-900/60 border-zinc-800 text-zinc-300'}`}>
+              <div className="flex items-center gap-2 font-semibold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle size={14} />
+                <span>Instant Member Access</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-zinc-500 dark:text-zinc-400 list-disc list-inside">
+                <li>Collaborate on open research projects</li>
+                <li>Submit & showcase your student work</li>
+                <li>Reserve hardware and lab equipment</li>
               </ul>
             </div>
           </div>
 
           <div className="lg:col-span-7">
-            <DossierCard clipLabel={`AUTH // ${authMode === 'signin' ? 'MEMBER SIGN IN' : 'NEW BUILDER REGISTRATION'}`} className="p-6 sm:p-8 font-mono">
-              {/* Tab Switcher */}
-              <div className="flex border-b mb-6 pb-2 gap-4 text-xs font-bold">
+            <div className={`p-6 sm:p-8 rounded-2xl border shadow-xl transition-colors ${isLight ? 'bg-white border-zinc-200' : 'bg-[#121316] border-zinc-800'}`}>
+              {/* Clean Segmented Tab Switcher */}
+              <div className="flex p-1 mb-6 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMode('signin');
                     setAuthError(null);
                   }}
-                  className={`pb-2 border-b-2 transition-colors ${
+                  className={`flex-1 py-2 rounded-lg transition-all text-center ${
                     authMode === 'signin'
-                      ? 'border-[#235347] text-[#235347]'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                      ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white shadow-sm font-bold'
+                      : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
-                  SIGN IN
+                  Sign In
                 </button>
                 <button
                   type="button"
@@ -258,13 +259,13 @@ export const MembersPortal: React.FC = () => {
                     setAuthMode('signup');
                     setAuthError(null);
                   }}
-                  className={`pb-2 border-b-2 transition-colors ${
+                  className={`flex-1 py-2 rounded-lg transition-all text-center ${
                     authMode === 'signup'
-                      ? 'border-[#235347] text-[#235347]'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                      ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white shadow-sm font-bold'
+                      : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
-                  REGISTER ACCOUNT
+                  Create Account
                 </button>
               </div>
 
@@ -277,122 +278,133 @@ export const MembersPortal: React.FC = () => {
                   <p className="text-[11px] text-zinc-300 leading-normal">
                     The backend connection key (<code className="font-mono text-amber-300 font-bold">VITE_SUPABASE_ANON_KEY</code>) is not yet set in the environment.
                   </p>
-                  <div className="p-2.5 rounded-lg bg-black/40 border border-zinc-800 text-[10px] space-y-1 font-mono text-zinc-400">
-                    <div>1. Open <a href="https://supabase.com/dashboard/project/hesflcaaupmphtorfqij/settings/api" target="_blank" rel="noreferrer" className="text-amber-400 underline">Supabase API Settings</a></div>
-                    <div>2. Copy the <strong>anon public</strong> key</div>
-                    <div>3. Add to Vercel (<code className="text-zinc-200">Settings &gt; Environment Variables</code>) or <code className="text-zinc-200">.env.local</code></div>
-                    <div>4. Redeploy to activate live authentication</div>
-                  </div>
                 </div>
               )}
 
               <form onSubmit={handleAuthSubmit} className="space-y-4">
                 {authMode === 'signup' && (
-                  <>
-                    <div>
-                      <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
-                        Full Name:
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Arjun Mehta"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
-                          isLight
-                            ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
-                            : 'bg-[#0e0f12] border-zinc-800 text-zinc-100 focus:border-[#235347]'
-                        } focus:outline-none`}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
-                        Builder Username (Optional):
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. arjun_m"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
-                          isLight
-                            ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
-                            : 'bg-[#0e0f12] border-zinc-800 text-zinc-100 focus:border-[#235347]'
-                        } focus:outline-none`}
-                      />
-                    </div>
-                  </>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Alex Chen"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition-colors ${
+                        isLight
+                          ? 'bg-zinc-50 border-zinc-300 text-zinc-950 focus:bg-white focus:border-[#235347]'
+                          : 'bg-zinc-900 border-zinc-700 text-zinc-100 focus:bg-zinc-950 focus:border-[#235347]'
+                      } focus:outline-none focus:ring-1 focus:ring-[#235347]`}
+                    />
+                  </div>
                 )}
 
                 <div>
-                  <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
-                    Electronic Mail:
+                  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    Email Address
                   </label>
                   <input
                     type="email"
                     required
-                    placeholder="builder@detox.build"
+                    placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition-colors ${
                       isLight
-                        ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
-                        : 'bg-[#0e0f12] border-zinc-800 text-zinc-100 focus:border-[#235347]'
-                    } focus:outline-none`}
+                        ? 'bg-zinc-50 border-zinc-300 text-zinc-950 focus:bg-white focus:border-[#235347]'
+                        : 'bg-zinc-900 border-zinc-700 text-zinc-100 focus:bg-zinc-950 focus:border-[#235347]'
+                    } focus:outline-none focus:ring-1 focus:ring-[#235347]`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
-                    Password:
+                  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    Password
                   </label>
                   <input
                     type="password"
                     required
-                    placeholder="••••••••••••"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full p-2.5 rounded-xs border text-xs font-mono transition-colors ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition-colors ${
                       isLight
-                        ? 'bg-[#f4f1ea] border-zinc-300 text-zinc-950 focus:border-[#235347]'
-                        : 'bg-[#0e0f12] border-zinc-800 text-zinc-100 focus:border-[#235347]'
-                    } focus:outline-none`}
+                        ? 'bg-zinc-50 border-zinc-300 text-zinc-950 focus:bg-white focus:border-[#235347]'
+                        : 'bg-zinc-900 border-zinc-700 text-zinc-100 focus:bg-zinc-950 focus:border-[#235347]'
+                    } focus:outline-none focus:ring-1 focus:ring-[#235347]`}
                   />
+                  {authMode === 'signup' && (
+                    <p className="text-[11px] text-zinc-500 mt-1">Minimum 6 characters</p>
+                  )}
                 </div>
 
                 {authError && (
-                  <div className="text-[11px] text-red-500 font-semibold p-2.5 rounded-xs bg-red-500/10 border border-red-500/30">
-                    [ERROR]: {authError}
+                  <div className="text-xs text-red-500 font-medium p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                    {authError}
                   </div>
                 )}
 
                 {authSuccess && (
-                  <div className="text-[11px] text-emerald-500 font-semibold p-2.5 rounded-xs bg-emerald-500/10 border border-emerald-500/30">
-                    [SUCCESS]: {authSuccess}
+                  <div className="text-xs text-emerald-500 font-medium p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    {authSuccess}
                   </div>
                 )}
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-2.5 bg-[#163B32] hover:bg-[#235347] disabled:opacity-50 text-white font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-2 mt-2 shadow-sm"
+                  className="w-full py-3 bg-[#163B32] hover:bg-[#235347] disabled:opacity-50 text-white text-sm font-semibold rounded-xl tracking-wide transition-all flex items-center justify-center gap-2 mt-2 shadow-md cursor-pointer"
                 >
                   {authMode === 'signin' ? (
                     <>
-                      <KeyRound size={13} />
-                      <span>{isSubmitting ? 'AUTHENTICATING...' : 'INITIALIZE WORKBENCH CONSOLE'}</span>
+                      <KeyRound size={15} />
+                      <span>{isSubmitting ? 'Signing in...' : 'Sign In'}</span>
                     </>
                   ) : (
                     <>
-                      <UserPlus size={13} />
-                      <span>{isSubmitting ? 'REGISTERING...' : 'CREATE MEMBER ACCOUNT'}</span>
+                      <UserPlus size={15} />
+                      <span>{isSubmitting ? 'Creating account...' : 'Create Account'}</span>
                     </>
                   )}
                 </button>
               </form>
-            </DossierCard>
+
+              {/* Bottom Quick Switch Link */}
+              <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800/80 text-center text-xs text-zinc-500">
+                {authMode === 'signin' ? (
+                  <span>
+                    New to DETOX?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('signup');
+                        setAuthError(null);
+                      }}
+                      className="text-[#235347] dark:text-[#99CDD8] font-bold hover:underline ml-1"
+                    >
+                      Create an account
+                    </button>
+                  </span>
+                ) : (
+                  <span>
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('signin');
+                        setAuthError(null);
+                      }}
+                      className="text-[#235347] dark:text-[#99CDD8] font-bold hover:underline ml-1"
+                    >
+                      Sign in
+                    </button>
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       ) : (

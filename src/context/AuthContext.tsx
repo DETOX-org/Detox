@@ -180,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const updateProfile = useCallback(async (updates: Partial<DbProfile>) => {
-    if (!user || !profile || !isSupabaseConfigured) {
+    if (!user || !isSupabaseConfigured) {
       return { error: new Error('Cannot update profile: not authenticated.') };
     }
 
@@ -193,8 +193,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { error } = await supabase
       .from('profiles')
-      .update(sanitizedUpdates)
-      .eq('user_id', user.id);
+      .upsert(
+        {
+          user_id: user.id,
+          email: user.email || '',
+          ...sanitizedUpdates,
+        },
+        { onConflict: 'user_id' }
+      );
 
     if (error) {
       console.error('Profile update error:', error);
@@ -203,12 +209,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     await refreshProfile();
     return { error: null };
-  }, [user, profile, refreshProfile]);
+  }, [user, refreshProfile]);
 
   // Authoritative role evaluation directly from the database profile
   const role = useMemo(() => {
-    if (!user || !profile) return null;
-    return profile.role || 'member';
+    if (!user) return null;
+    return profile?.role || 'member';
   }, [user, profile]);
 
   const isAdmin = useMemo(() => {

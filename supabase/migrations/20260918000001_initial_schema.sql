@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- DETOX Platform V2 — Authoritative Backend Schema & Database Security
 -- Migration: 20260918000001_initial_schema.sql
 -- ============================================================================
@@ -81,9 +81,9 @@ BEGIN
     RAISE EXCEPTION 'Cannot modify profile user_id.';
   END IF;
 
-  -- Only superadmins can modify role or status
+  -- Only superadmins (or direct database admin / service role where auth.uid() is null) can modify role or status
   IF (NEW.role != OLD.role OR NEW.status != OLD.status) THEN
-    IF NOT public.is_superadmin() THEN
+    IF auth.uid() IS NOT NULL AND NOT public.is_superadmin() THEN
       RAISE EXCEPTION 'Unauthorized: Only Super Admins are permitted to modify member roles or account status.';
     END IF;
   END IF;
@@ -338,6 +338,11 @@ DROP POLICY IF EXISTS "Profiles are readable by everyone" ON public.profiles;
 CREATE POLICY "Profiles are readable by everyone"
   ON public.profiles FOR SELECT
   USING (true);
+
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile"
+  ON public.profiles FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"
