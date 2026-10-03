@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- DETOX Platform V2 — Seed Data Migration
 -- Seed: supabase/seed.sql
 -- ============================================================================
@@ -200,6 +200,24 @@ INSERT INTO public.events (
     '[{"label": "Exploit Harness Code", "url": "https://github.com/detox-build"}]'::jsonb,
     'PUBLISHED',
     true
+),
+(
+    'game-building-hackathon-2026',
+    'DTX-GAME-2026',
+    'DETOX Game Building Hackathon 2026',
+    'HACKATHON',
+    '2026-10-26',
+    '48-Hour Hybrid Build Sprint',
+    'DETOX Hardware Lab & Online Discord',
+    '64 Builders / 18 Teams',
+    'A 48-hour student game development marathon focused on bespoke graphics engines, raymarched shaders, fixed-point deterministic physics, and mechanical arcade controls.',
+    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+    'Game Physics & Custom Engine Bring-Up',
+    'Students assembling custom collision pipelines, GLSL shaders, and WASM bindings with zero corporate engine bloat.',
+    ARRAY['Playable web or binary game build', 'Public Git repository', 'Engineering post-mortem write-up'],
+    '[{"label": "Submissions Gallery", "url": "/events/game-building-hackathon-2026/submissions"}]'::jsonb,
+    'PUBLISHED',
+    false
 )
 ON CONFLICT (id) DO UPDATE SET
     code = EXCLUDED.code,
@@ -632,3 +650,26 @@ ON CONFLICT (id) DO UPDATE SET
     date = EXCLUDED.date,
     active = EXCLUDED.active,
     status = EXCLUDED.status;
+
+-- 7. SUBMISSIONS (Sample Dev Seed)
+INSERT INTO public.submissions (
+    id, event_id, title, slug, category, description, cover_image, team_name, participant_names, tech_stack, demo_url, repository_url, screenshots, result_badge, published
+) VALUES
+(
+    'sub-orbital-decay',
+    'game-building-hackathon-2026',
+    'Orbital Decay: N-Body Gravity Slingshot',
+    'orbital-decay',
+    'Physics Simulation',
+    'A real-time N-body gravitational dynamics simulator where players compute orbital transfers, Lagrange points, and gravity assist slingshots to guide stranded interplanetary research probes across chaotic multi-star orbits.',
+    'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?auto=format&fit=crop&w=1200&q=80',
+    'Team Kepler-42',
+    ARRAY['Dev P.', 'Aditya N.'],
+    ARRAY['Rust', 'Bevy', 'Wasm', 'WebGPU', 'Verlet Integration'],
+    'https://orbital-decay.detox.build',
+    'https://github.com/detox-build/orbital-decay',
+    ARRAY['https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80'],
+    '1st Place / Overall Winner',
+    true
+)
+ON CONFLICT (id) DO NOTHING;

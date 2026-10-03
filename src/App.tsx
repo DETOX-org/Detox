@@ -15,6 +15,8 @@ import { MindsBehindDetoxPage } from './pages/MindsBehindDetoxPage';
 import { PersonProfilePage } from './pages/PersonProfilePage';
 import { MembersPortal } from './pages/MembersPortal';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { SubmissionsGalleryPage } from './pages/SubmissionsGalleryPage';
+import { SubmissionDetailPage } from './pages/SubmissionDetailPage';
 import { ArtifactModal } from './components/ArtifactModal';
 
 function AppContent() {
@@ -31,6 +33,19 @@ function AppContent() {
   const renderActivePage = () => {
     if (path.startsWith('/people/')) {
       return <PersonProfilePage />;
+    }
+
+    // Dynamic Hackathon / Event Submissions routing:
+    // /events/:eventId/submissions/:submissionId
+    // /events/:eventId/submissions
+    if (path.startsWith('/events/')) {
+      const parts = path.split('/').filter(Boolean);
+      if (parts.length >= 4 && parts[2] === 'submissions') {
+        return <SubmissionDetailPage eventId={parts[1]} submissionId={parts[3]} />;
+      }
+      if (parts.length >= 3 && parts[2] === 'submissions') {
+        return <SubmissionsGalleryPage eventId={parts[1]} />;
+      }
     }
 
     switch (path) {

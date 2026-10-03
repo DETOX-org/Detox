@@ -23,7 +23,7 @@ export interface ProjectItem {
   updatedAt: string;
 }
 
-export type EventCategory = 'WORKSHOP' | 'PAPER SALON' | 'WEEKEND BUILD' | 'SECURITY AUDIT';
+export type EventCategory = 'WORKSHOP' | 'PAPER SALON' | 'WEEKEND BUILD' | 'SECURITY AUDIT' | 'HACKATHON';
 
 export interface EventItem {
   id: string;
@@ -42,6 +42,27 @@ export interface EventItem {
   resources?: Array<{ label: string; url?: string }>;
   status: ContentStatus;
   isUpcoming: boolean;
+  hasSubmissions?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubmissionItem {
+  id: string;
+  eventId: string;
+  title: string;
+  slug?: string;
+  description: string;
+  coverImage?: string;
+  teamName?: string;
+  participantNames: string[];
+  category?: string;
+  techStack?: string[];
+  demoUrl?: string;
+  repositoryUrl?: string;
+  screenshots?: string[];
+  resultBadge?: string;
+  published: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -225,7 +246,8 @@ export type AuditTargetType =
   | 'PERSON' 
   | 'SETTING' 
   | 'ACCOMPLISHMENT'
-  | 'ANNOUNCEMENT';
+  | 'ANNOUNCEMENT'
+  | 'SUBMISSION';
 
 export interface AuditLogEntry {
   id: string;

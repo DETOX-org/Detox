@@ -30,7 +30,7 @@ function normalizePath(pathname: string): string {
   const rawTarget = hash ? hash.split('?')[0] : pathname.split('?')[0];
   const target = rawTarget.startsWith('/') ? rawTarget : '/' + rawTarget;
 
-  if (target.startsWith('/people/')) {
+  if (target.startsWith('/people/') || target.startsWith('/events/')) {
     return target;
   }
 

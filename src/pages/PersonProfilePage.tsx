@@ -95,64 +95,9 @@ export const PersonProfilePage: React.FC = () => {
     (p) => (p.slug && p.slug.toLowerCase() === slugOrId.toLowerCase()) || p.id === slugOrId
   );
 
-  // If loading data, show spinner
-  if (!person && isLoadingData) {
-    return (
-      <PageContainer maxWidth="6xl">
-        <div className="py-24 text-center space-y-4">
-          <div className="inline-block w-8 h-8 border-2 border-[#235347] dark:border-[#38B2A2] border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm">Loading builder profile...</p>
-        </div>
-      </PageContainer>
-    );
-  }
-
-  // If person not found after load, render clean return state
-  if (!person) {
-    return (
-      <PageContainer maxWidth="6xl">
-        <div className="py-20 text-center space-y-4">
-          <h2 className="font-display text-3xl font-bold text-zinc-950 dark:text-zinc-50">Builder profile not found</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-            The profile you are looking for may have moved or been updated.
-          </p>
-          <div className="pt-4">
-            <Link
-              to="/minds"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#235347] dark:bg-[#38B2A2] text-white dark:text-zinc-950 text-xs font-semibold hover:bg-[#163B32] dark:hover:bg-[#4ecdc4] transition-colors"
-            >
-              <ArrowLeft size={14} />
-              <span>Return to Minds Behind DETOX</span>
-            </Link>
-          </div>
-        </div>
-      </PageContainer>
-    );
-  }
-
-  const accent = person.paletteAccent || '#235347';
-
-  // Resolve linked projects
-  const linkedProjects = projects.filter((prj) => {
-    if (person.contributedProjectIds && person.contributedProjectIds.includes(prj.id)) {
-      return true;
-    }
-    // Also match by contributor name
-    return prj.contributors.some(
-      (c) => c.toLowerCase().includes(person.name.toLowerCase()) || person.name.toLowerCase().includes(c.toLowerCase())
-    );
-  });
-
-  // Resolve linked events
-  const linkedEvents = events.filter((evt) => {
-    if (person.participatedEventIds && person.participatedEventIds.includes(evt.id)) {
-      return true;
-    }
-    return false;
-  });
-
   // Comprehensive list of communication & social links
   const contactLinks = React.useMemo(() => {
+    if (!person) return [];
     const list: Array<{
       id: string;
       label: string;
@@ -323,6 +268,62 @@ export const PersonProfilePage: React.FC = () => {
 
     return list;
   }, [person]);
+
+  // If loading data, show spinner
+  if (!person && isLoadingData) {
+    return (
+      <PageContainer maxWidth="6xl">
+        <div className="py-24 text-center space-y-4">
+          <div className="inline-block w-8 h-8 border-2 border-[#235347] dark:border-[#38B2A2] border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">Loading builder profile...</p>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // If person not found after load, render clean return state
+  if (!person) {
+    return (
+      <PageContainer maxWidth="6xl">
+        <div className="py-20 text-center space-y-4">
+          <h2 className="font-display text-3xl font-bold text-zinc-950 dark:text-zinc-50">Builder profile not found</h2>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+            The profile you are looking for may have moved or been updated.
+          </p>
+          <div className="pt-4">
+            <Link
+              to="/minds"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#235347] dark:bg-[#38B2A2] text-white dark:text-zinc-950 text-xs font-semibold hover:bg-[#163B32] dark:hover:bg-[#4ecdc4] transition-colors"
+            >
+              <ArrowLeft size={14} />
+              <span>Return to Minds Behind DETOX</span>
+            </Link>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  const accent = person.paletteAccent || '#235347';
+
+  // Resolve linked projects
+  const linkedProjects = projects.filter((prj) => {
+    if (person.contributedProjectIds && person.contributedProjectIds.includes(prj.id)) {
+      return true;
+    }
+    // Also match by contributor name
+    return prj.contributors.some(
+      (c) => c.toLowerCase().includes(person.name.toLowerCase()) || person.name.toLowerCase().includes(c.toLowerCase())
+    );
+  });
+
+  // Resolve linked events
+  const linkedEvents = events.filter((evt) => {
+    if (person.participatedEventIds && person.participatedEventIds.includes(evt.id)) {
+      return true;
+    }
+    return false;
+  });
 
   return (
     <PageContainer maxWidth="6xl">

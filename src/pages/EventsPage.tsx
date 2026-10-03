@@ -2,7 +2,7 @@ import React from 'react';
 import { PageContainer, SectionHeader, DossierCard, PhotoFrame, Tag, type TagVariant } from '../design-system/primitives';
 import { useTheme } from '../ThemeContext';
 import { Calendar, Clock, MapPin, ArrowUpRight, CheckCircle2, FileText, Camera } from 'lucide-react';
-import { useRouter } from '../router';
+import { useRouter, Link } from '../router';
 import { useCms } from '../cms/CmsContext';
 
 export const EventsPage: React.FC = () => {
@@ -80,7 +80,9 @@ export const EventsPage: React.FC = () => {
         ) : (
           displayedEvents.map((evt) => {
             const evtTagVariant: TagVariant =
-              evt.category === 'WORKSHOP'
+              evt.category === 'HACKATHON'
+                ? 'teal'
+                : evt.category === 'WORKSHOP'
                 ? 'cream'
                 : evt.category === 'WEEKEND BUILD'
                 ? 'cottonPink'
@@ -91,7 +93,9 @@ export const EventsPage: React.FC = () => {
                 : 'lavender';
 
             const evtAccentColor =
-              evt.category === 'WORKSHOP'
+              evt.category === 'HACKATHON'
+                ? '#38B2A2'
+                : evt.category === 'WORKSHOP'
                 ? '#FDE8D3'
                 : evt.category === 'WEEKEND BUILD'
                 ? '#FFC8DD'
@@ -192,7 +196,26 @@ export const EventsPage: React.FC = () => {
                     )}
                   </div>
 
-                  {evt.isUpcoming ? (
+                  {evt.hasSubmissions || evt.category === 'HACKATHON' || evt.id === 'game-building-hackathon-2026' ? (
+                    <div className="space-y-2">
+                      <Link
+                        to={`/events/${encodeURIComponent(evt.id)}/submissions`}
+                        className="w-full py-2 bg-[#235347] hover:bg-[#163B32] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 text-center font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+                      >
+                        <span>BROWSE SUBMISSIONS</span>
+                        <ArrowUpRight size={13} />
+                      </Link>
+                      {evt.isUpcoming && (
+                        <a
+                          href={`mailto:collective@detox.build?subject=Event%20RSVP:%20${encodeURIComponent(evt.title)}`}
+                          className="w-full py-1.5 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 text-center font-mono text-[11px] font-semibold rounded-xs transition-colors flex items-center justify-center gap-1"
+                        >
+                          <span>RESERVE BENCH</span>
+                          <ArrowUpRight size={11} />
+                        </a>
+                      )}
+                    </div>
+                  ) : evt.isUpcoming ? (
                     <a
                       href={`mailto:collective@detox.build?subject=Event%20RSVP:%20${encodeURIComponent(evt.title)}`}
                       className="w-full py-2 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 text-center font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-1.5"

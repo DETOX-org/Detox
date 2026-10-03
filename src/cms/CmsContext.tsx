@@ -14,6 +14,7 @@ import type {
   AuditAction,
   AuditTargetType,
   CollageStageSettings,
+  SubmissionItem,
 } from './types';
 import {
   DEFAULT_ROLES,
@@ -27,6 +28,7 @@ import {
   DEFAULT_SETTINGS,
   DEFAULT_COLLAGE_SETTINGS,
   DEFAULT_AUDIT_LOGS,
+  DEFAULT_SUBMISSIONS,
 } from './seedData';
 import { supabase, isSupabaseConfigured, type DbProfile } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +37,7 @@ interface CmsContextValue {
   // Entities
   projects: ProjectItem[];
   events: EventItem[];
+  submissions: SubmissionItem[];
   mediaItems: MediaItem[];
   people: PersonItem[];
   accomplishments: AccomplishmentItem[];
@@ -67,6 +70,12 @@ interface CmsContextValue {
   updateEvent: (id: string, updates: Partial<EventItem>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
   setEventStatus: (id: string, status: ContentStatus) => Promise<void>;
+
+  // Mutations - Submissions
+  addSubmission: (submission: Omit<SubmissionItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateSubmission: (id: string, updates: Partial<SubmissionItem>) => Promise<void>;
+  deleteSubmission: (id: string) => Promise<void>;
+  setSubmissionPublished: (id: string, published: boolean) => Promise<void>;
 
   // Mutations - Media
   addMedia: (media: Omit<MediaItem, 'id' | 'uploadedAt' | 'uploadedBy'>) => Promise<void>;
@@ -231,6 +240,7 @@ function mapDbEvent(row: any): EventItem {
     resources: row.resources || [],
     status: row.status || 'DRAFT',
     isUpcoming: Boolean(row.is_upcoming),
+    hasSubmissions: Boolean(row.has_submissions || row.category === 'HACKATHON' || row.id === 'game-building-hackathon-2026'),
     createdAt: row.created_at ? row.created_at.split('T')[0] : '',
     updatedAt: row.updated_at ? row.updated_at.split('T')[0] : '',
   };
@@ -254,6 +264,49 @@ function mapEventToDb(e: Partial<EventItem>): any {
   if (e.resources !== undefined) row.resources = e.resources;
   if (e.status !== undefined) row.status = e.status;
   if (e.isUpcoming !== undefined) row.is_upcoming = e.isUpcoming;
+  row.updated_at = new Date().toISOString();
+  return row;
+}
+
+function mapDbSubmission(row: any): SubmissionItem {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    title: row.title,
+    slug: row.slug || row.id,
+    description: row.description || '',
+    coverImage: row.cover_image || undefined,
+    teamName: row.team_name || undefined,
+    participantNames: row.participant_names || [],
+    category: row.category || undefined,
+    techStack: row.tech_stack || [],
+    demoUrl: row.demo_url || undefined,
+    repositoryUrl: row.repository_url || undefined,
+    screenshots: row.screenshots || [],
+    resultBadge: row.result_badge || undefined,
+    published: Boolean(row.published),
+    createdAt: row.created_at ? row.created_at.split('T')[0] : '',
+    updatedAt: row.updated_at ? row.updated_at.split('T')[0] : '',
+  };
+}
+
+function mapSubmissionToDb(s: Partial<SubmissionItem>): any {
+  const row: any = {};
+  if (s.id !== undefined) row.id = s.id;
+  if (s.eventId !== undefined) row.event_id = s.eventId;
+  if (s.title !== undefined) row.title = s.title;
+  if (s.slug !== undefined) row.slug = s.slug;
+  if (s.description !== undefined) row.description = s.description;
+  if (s.coverImage !== undefined) row.cover_image = s.coverImage;
+  if (s.teamName !== undefined) row.team_name = s.teamName;
+  if (s.participantNames !== undefined) row.participant_names = s.participantNames;
+  if (s.category !== undefined) row.category = s.category;
+  if (s.techStack !== undefined) row.tech_stack = s.techStack;
+  if (s.demoUrl !== undefined) row.demo_url = s.demoUrl;
+  if (s.repositoryUrl !== undefined) row.repository_url = s.repositoryUrl;
+  if (s.screenshots !== undefined) row.screenshots = s.screenshots;
+  if (s.resultBadge !== undefined) row.result_badge = s.resultBadge;
+  if (s.published !== undefined) row.published = s.published;
   row.updated_at = new Date().toISOString();
   return row;
 }
@@ -288,6 +341,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [projects, setProjects] = useState<ProjectItem[]>(isSupabaseConfigured ? [] : DEFAULT_PROJECTS);
   const [events, setEvents] = useState<EventItem[]>(isSupabaseConfigured ? [] : DEFAULT_EVENTS);
+  const [submissions, setSubmissions] = useState<SubmissionItem[]>(DEFAULT_SUBMISSIONS);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(isSupabaseConfigured ? [] : DEFAULT_MEDIA);
   const [people, setPeople] = useState<PersonItem[]>(isSupabaseConfigured ? [] : DEFAULT_PEOPLE);
   const [accomplishments, setAccomplishments] = useState<AccomplishmentItem[]>(isSupabaseConfigured ? [] : DEFAULT_ACCOMPLISHMENTS);
@@ -331,6 +385,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const [
         projRes,
         evtRes,
+        subRes,
         peopleRes,
         mediaRes,
         accRes,
@@ -340,6 +395,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ] = await Promise.all([
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.from('events').select('*').order('date', { ascending: true }),
+        supabase.from('submissions').select('*').order('created_at', { ascending: false }),
         supabase.from('people').select('*').order('display_order', { ascending: true }),
         supabase.from('media').select('*').order('created_at', { ascending: false }),
         supabase.from('accomplishments').select('*').order('date', { ascending: false }),
@@ -348,11 +404,22 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(50),
       ]);
 
-      if (projRes.data && !projRes.error) {
+      if (projRes.data && !projRes.error && projRes.data.length > 0) {
         setProjects(projRes.data.map(mapDbProject));
+      } else if (projRes.error || !projRes.data || projRes.data.length === 0) {
+        setProjects(DEFAULT_PROJECTS);
       }
-      if (evtRes.data && !evtRes.error) {
+
+      if (evtRes.data && !evtRes.error && evtRes.data.length > 0) {
         setEvents(evtRes.data.map(mapDbEvent));
+      } else if (evtRes.error || !evtRes.data || evtRes.data.length === 0) {
+        setEvents(DEFAULT_EVENTS);
+      }
+
+      if (subRes.data && !subRes.error && subRes.data.length > 0) {
+        setSubmissions(subRes.data.map(mapDbSubmission));
+      } else if (subRes.error || !subRes.data || subRes.data.length === 0) {
+        setSubmissions(DEFAULT_SUBMISSIONS);
       }
       if (peopleRes.data && !peopleRes.error) {
         setPeople(peopleRes.data.map(mapDbPerson));
@@ -621,6 +688,62 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await updateEvent(id, { status });
     },
     [updateEvent]
+  );
+
+  // Mutations: Submissions
+  const addSubmission = useCallback(
+    async (item: Omit<SubmissionItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const now = new Date().toISOString().split('T')[0];
+      const id = item.slug || `sub-${Date.now()}`;
+      const newSubmission: SubmissionItem = { ...item, id, createdAt: now, updatedAt: now };
+
+      setSubmissions((prev) => [newSubmission, ...prev]);
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('submissions').insert(mapSubmissionToDb(newSubmission));
+        if (error) console.error('Supabase error inserting submission:', error);
+      }
+
+      await logAudit('CREATE', 'SUBMISSION', id, `Added submission "${item.title}"`);
+    },
+    [logAudit]
+  );
+
+  const updateSubmission = useCallback(
+    async (id: string, updates: Partial<SubmissionItem>) => {
+      const now = new Date().toISOString().split('T')[0];
+      setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates, updatedAt: now } : s)));
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('submissions').update(mapSubmissionToDb(updates)).eq('id', id);
+        if (error) console.error('Supabase error updating submission:', error);
+      }
+
+      await logAudit('UPDATE', 'SUBMISSION', id, `Updated submission "${id}"`);
+    },
+    [logAudit]
+  );
+
+  const deleteSubmission = useCallback(
+    async (id: string) => {
+      const target = submissions.find((s) => s.id === id);
+      setSubmissions((prev) => prev.filter((s) => s.id !== id));
+
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.from('submissions').delete().eq('id', id);
+        if (error) console.error('Supabase error deleting submission:', error);
+      }
+
+      await logAudit('DELETE', 'SUBMISSION', id, `Deleted submission "${target?.title || id}"`);
+    },
+    [submissions, logAudit]
+  );
+
+  const setSubmissionPublished = useCallback(
+    async (id: string, published: boolean) => {
+      await updateSubmission(id, { published });
+    },
+    [updateSubmission]
   );
 
   // Mutations: People
@@ -1022,6 +1145,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const resetToSeedData = useCallback(() => {
     setProjects(DEFAULT_PROJECTS);
     setEvents(DEFAULT_EVENTS);
+    setSubmissions(DEFAULT_SUBMISSIONS);
     setMediaItems(DEFAULT_MEDIA);
     setPeople(DEFAULT_PEOPLE);
     setAccomplishments(DEFAULT_ACCOMPLISHMENTS);
@@ -1037,6 +1161,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         projects,
         events,
+        submissions,
         mediaItems,
         people,
         accomplishments,
@@ -1059,6 +1184,10 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateEvent,
         deleteEvent,
         setEventStatus,
+        addSubmission,
+        updateSubmission,
+        deleteSubmission,
+        setSubmissionPublished,
         addMedia,
         deleteMedia,
         addPerson,
