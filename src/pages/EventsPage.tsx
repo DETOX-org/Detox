@@ -2,7 +2,7 @@ import React from 'react';
 import { PageContainer, SectionHeader, DossierCard, PhotoFrame, Tag, type TagVariant } from '../design-system/primitives';
 import { useTheme } from '../ThemeContext';
 import { Calendar, Clock, MapPin, ArrowUpRight, CheckCircle2, FileText, Camera } from 'lucide-react';
-import { useRouter, Link } from '../router';
+import { useRouter } from '../router';
 import { useCms } from '../cms/CmsContext';
 
 export const EventsPage: React.FC = () => {
@@ -196,29 +196,10 @@ export const EventsPage: React.FC = () => {
                     )}
                   </div>
 
-                  {evt.hasSubmissions || evt.category === 'HACKATHON' || evt.id === 'game-building-hackathon-2026' ? (
-                    <div className="space-y-2">
-                      <Link
-                        to={`/events/${encodeURIComponent(evt.id)}/submissions`}
-                        className="w-full py-2 bg-[#235347] hover:bg-[#163B32] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 text-center font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs"
-                      >
-                        <span>BROWSE SUBMISSIONS</span>
-                        <ArrowUpRight size={13} />
-                      </Link>
-                      {evt.isUpcoming && (
-                        <a
-                          href={`mailto:collective@detox.build?subject=Event%20RSVP:%20${encodeURIComponent(evt.title)}`}
-                          className="w-full py-1.5 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 text-center font-mono text-[11px] font-semibold rounded-xs transition-colors flex items-center justify-center gap-1"
-                        >
-                          <span>RESERVE BENCH</span>
-                          <ArrowUpRight size={11} />
-                        </a>
-                      )}
-                    </div>
-                  ) : evt.isUpcoming ? (
+                  {evt.isUpcoming ? (
                     <a
                       href={`mailto:collective@detox.build?subject=Event%20RSVP:%20${encodeURIComponent(evt.title)}`}
-                      className="w-full py-2 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 text-center font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-1.5"
+                      className="w-full py-2 bg-[#163B32] hover:bg-[#235347] dark:bg-[#38B2A2] dark:hover:bg-[#4ecdc4] text-white dark:text-zinc-950 text-center font-mono text-xs font-bold rounded-xs tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs"
                     >
                       <span>RESERVE BENCH</span>
                       <ArrowUpRight size={13} />
@@ -226,12 +207,16 @@ export const EventsPage: React.FC = () => {
                   ) : (
                     <div className="space-y-1.5 text-[11px]">
                       <div className="text-[10px] text-zinc-500 uppercase font-semibold">PRESERVED ARTIFACTS:</div>
-                      {evt.resources?.map((res, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 text-[#235347] dark:text-[#99CDD8] font-semibold hover:underline cursor-pointer">
-                          <FileText size={12} />
-                          <span>{res.label}</span>
-                        </div>
-                      ))}
+                      {evt.resources && evt.resources.length > 0 ? (
+                        evt.resources.map((res, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5 text-[#235347] dark:text-[#99CDD8] font-semibold hover:underline cursor-pointer">
+                            <FileText size={12} />
+                            <span>{res.label}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-zinc-500 italic text-[10px]">Archive record cataloged</span>
+                      )}
                     </div>
                   )}
                 </div>

@@ -41,7 +41,7 @@ import {
 } from 'lucide-react';
 
 type AdminTab = 'OVERVIEW' | 'HACKATHONS' | 'PEOPLE' | 'CONTENT' | 'MEDIA' | 'MEMBERS' | 'ACCESS' | 'SYSTEM';
-type ContentSubTab = 'PROJECTS' | 'EVENTS' | 'SUBMISSIONS' | 'PEOPLE' | 'ACCOMPLISHMENTS' | 'ANNOUNCEMENTS';
+type ContentSubTab = 'PROJECTS' | 'EVENTS' | 'PEOPLE' | 'ACCOMPLISHMENTS' | 'ANNOUNCEMENTS';
 
 export const AdminDashboard: React.FC = () => {
   const { user, profile, isAdmin, isSuperAdmin, isLoading: isAuthLoading } = useAuth();
@@ -49,7 +49,6 @@ export const AdminDashboard: React.FC = () => {
   const {
     projects,
     events,
-    submissions,
     mediaItems,
     people,
     accomplishments,
@@ -64,8 +63,6 @@ export const AdminDashboard: React.FC = () => {
     addEvent,
     deleteEvent,
     setEventStatus,
-    deleteSubmission,
-    setSubmissionPublished,
     addMedia,
     deleteMedia,
     addPerson,
@@ -1006,7 +1003,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Sub-Tabs Bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
               <div className="flex items-center gap-1 text-[10px]">
-                {(['PROJECTS', 'EVENTS', 'SUBMISSIONS', 'PEOPLE', 'ACCOMPLISHMENTS', 'ANNOUNCEMENTS'] as ContentSubTab[]).map(
+                {(['PROJECTS', 'EVENTS', 'PEOPLE', 'ACCOMPLISHMENTS', 'ANNOUNCEMENTS'] as ContentSubTab[]).map(
                   (tab) => (
                     <button
                       key={tab}
@@ -1244,155 +1241,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
             )}
 
-            {/* SUBMISSIONS SUB-TAB (HACKATHONS / SHOWCASE) */}
-            {contentSubTab === 'SUBMISSIONS' && (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="font-bold text-[#235347] dark:text-[#99CDD8]">
-                      // HACKATHON & EVENT SUBMISSIONS ({submissions.length})
-                    </div>
-                    <div className="text-[10px] text-zinc-500">
-                      Manage public visibility, team entries, and results for hackathons.
-                    </div>
-                  </div>
 
-                  <Link
-                    to="/events/game-building-hackathon-2026/submissions"
-                    className="px-3 py-1.5 bg-[#163B32] hover:bg-[#235347] text-white rounded-xs font-semibold flex items-center gap-1.5 text-xs transition-colors"
-                  >
-                    <Eye size={12} />
-                    <span>VIEW PUBLIC GALLERY</span>
-                  </Link>
-                </div>
-
-                <div
-                  className={`rounded-xl border overflow-x-auto ${
-                    isLight ? 'bg-white border-zinc-200 shadow-xs' : 'bg-[#121316] border-zinc-800 shadow-md'
-                  }`}
-                >
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead
-                      className={`border-b text-[10px] uppercase font-bold ${
-                        isLight ? 'bg-zinc-50 text-zinc-500 border-zinc-200' : 'bg-zinc-900/50 text-zinc-400 border-zinc-800'
-                      }`}
-                    >
-                      <tr>
-                        <th className="p-3">Cover</th>
-                        <th className="p-3">Project Title</th>
-                        <th className="p-3">Team / Submitter</th>
-                        <th className="p-3">Event</th>
-                        <th className="p-3">Category</th>
-                        <th className="p-3">Award / Badge</th>
-                        <th className="p-3">Public Status</th>
-                        <th className="p-3 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-inherit">
-                      {submissions
-                        .filter((s) => {
-                          if (statusFilter === 'PUBLISHED') return s.published;
-                          if (statusFilter === 'DRAFT') return !s.published;
-                          return true;
-                        })
-                        .map((sub) => (
-                          <tr
-                            key={sub.id}
-                            className={`hover:bg-zinc-500/5 transition-colors ${
-                              !sub.published ? 'opacity-70' : ''
-                            }`}
-                          >
-                            <td className="p-3">
-                              <div className="w-12 h-9 rounded-md bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
-                                {sub.coverImage ? (
-                                  <img
-                                    src={sub.coverImage}
-                                    alt={sub.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-[8px] text-zinc-500 font-mono">
-                                    N/A
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-3">
-                              <div className="font-bold font-sans text-sm text-zinc-900 dark:text-zinc-100">
-                                {sub.title}
-                              </div>
-                              <div className="text-[10px] text-zinc-500 font-mono">
-                                id: {sub.id}
-                              </div>
-                            </td>
-                            <td className="p-3">
-                              <div className="font-medium text-zinc-800 dark:text-zinc-200">
-                                {sub.teamName || '—'}
-                              </div>
-                              <div className="text-[10px] text-zinc-500">
-                                {sub.participantNames.join(', ') || 'Independent'}
-                              </div>
-                            </td>
-                            <td className="p-3 text-zinc-500 text-[11px]">
-                              {sub.eventId}
-                            </td>
-                            <td className="p-3">
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                                {sub.category || 'General'}
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              {sub.resultBadge ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-zinc-950">
-                                  <Trophy size={10} />
-                                  <span>{sub.resultBadge}</span>
-                                </span>
-                              ) : (
-                                <span className="text-zinc-400">—</span>
-                              )}
-                            </td>
-                            <td className="p-3">
-                              <button
-                                onClick={() => setSubmissionPublished(sub.id, !sub.published)}
-                                className={`px-2 py-0.5 rounded-xs text-[10px] font-bold transition-colors ${
-                                  sub.published
-                                    ? 'bg-[#235347]/20 text-[#235347] dark:text-[#38B2A2] hover:bg-[#235347]/30'
-                                    : 'bg-zinc-500/20 text-zinc-500 hover:bg-zinc-500/30'
-                                }`}
-                                title="Click to toggle public visibility"
-                              >
-                                {sub.published ? 'PUBLISHED' : 'UNPUBLISHED'}
-                              </button>
-                            </td>
-                            <td className="p-3 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <Link
-                                  to={
-                                    sub.hackathonId
-                                      ? `/hackathons/${encodeURIComponent(sub.hackathonId)}/submissions/${encodeURIComponent(sub.id)}`
-                                      : `/events/${encodeURIComponent(sub.eventId || '')}/submissions/${encodeURIComponent(sub.id)}`
-                                  }
-                                  className="p-1 rounded-md hover:bg-zinc-500/10 text-[#235347] dark:text-[#99CDD8]"
-                                  title="View on public website"
-                                >
-                                  <Eye size={14} />
-                                </Link>
-                                <button
-                                  onClick={() => deleteSubmission(sub.id)}
-                                  className="p-1 rounded-md hover:bg-red-500/10 text-red-500"
-                                  title="Delete submission"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
 
             {/* PEOPLE SUB-TAB (MINDS BEHIND DETOX) */}
             {contentSubTab === 'PEOPLE' && renderPeopleManagementSection()}

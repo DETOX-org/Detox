@@ -42,72 +42,43 @@ export interface EventItem {
   resources?: Array<{ label: string; url?: string }>;
   status: ContentStatus;
   isUpcoming: boolean;
-  hasSubmissions?: boolean;
   createdAt: string;
   updatedAt: string;
 }
-
-export type HackathonStatus = 'UPCOMING' | 'ONGOING' | 'PREVIOUS' | 'ARCHIVED';
 
 export interface HackathonItem {
   id: string;
   title: string;
   slug: string;
-  tagline: string;
+  tagline?: string;
   description: string;
+  date: string;
   coverImage?: string;
-  bannerImage?: string;
-  status: HackathonStatus;
-  startDate: string;
-  endDate: string;
-  registrationDeadline?: string;
-  submissionDeadline?: string;
-  rules?: string;
-  theme?: string;
-  categories: string[];
-  organizer: string;
   location?: string;
-  capacity?: string;
   isPublished: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export type RegistrationStatus = 'REGISTERED' | 'CONFIRMED' | 'CANCELLED';
-
-export interface HackathonRegistration {
+export interface HackathonProjectItem {
   id: string;
   hackathonId: string;
-  userId?: string;
-  fullName: string;
-  email: string;
-  discordHandle?: string;
-  teamName?: string;
-  skills: string[];
-  status: RegistrationStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SubmissionItem {
-  id: string;
-  eventId?: string;
-  hackathonId?: string;
   title: string;
-  slug?: string;
+  slug: string;
   description: string;
-  coverImage?: string;
   teamName?: string;
-  participantNames: string[];
-  category?: string;
-  techStack?: string[];
-  demoUrl?: string;
-  repositoryUrl?: string;
+  teamMembers?: string[];
+  coverImage?: string;
   screenshots?: string[];
-  resultBadge?: string;
+  techStack?: string[];
+  repositoryUrl?: string;
+  demoUrl?: string;
+  placement?: string;
+  isWinner: boolean;
+  isFeatured?: boolean;
   published: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type MediaCategory = 'ALL' | 'EVENTS' | 'PROJECTS' | 'COMMUNITY' | 'PEOPLE';
@@ -290,9 +261,8 @@ export type AuditTargetType =
   | 'SETTING' 
   | 'ACCOMPLISHMENT' 
   | 'ANNOUNCEMENT' 
-  | 'SUBMISSION'
-  | 'HACKATHON'
-  | 'REGISTRATION';
+  | 'HACKATHON' 
+  | 'HACKATHON_PROJECT';
 
 export interface AuditLogEntry {
   id: string;

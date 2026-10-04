@@ -14,10 +14,8 @@ import type {
   AuditAction,
   AuditTargetType,
   CollageStageSettings,
-  SubmissionItem,
   HackathonItem,
-  HackathonRegistration,
-  HackathonStatus,
+  HackathonProjectItem,
 } from './types';
 import {
   DEFAULT_ROLES,
@@ -31,9 +29,8 @@ import {
   DEFAULT_SETTINGS,
   DEFAULT_COLLAGE_SETTINGS,
   DEFAULT_AUDIT_LOGS,
-  DEFAULT_SUBMISSIONS,
   DEFAULT_HACKATHONS,
-  DEFAULT_HACKATHON_REGISTRATIONS,
+  DEFAULT_HACKATHON_PROJECTS,
 } from './seedData';
 import { supabase, isSupabaseConfigured, type DbProfile } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -43,8 +40,7 @@ interface CmsContextValue {
   projects: ProjectItem[];
   events: EventItem[];
   hackathons: HackathonItem[];
-  hackathonRegistrations: HackathonRegistration[];
-  submissions: SubmissionItem[];
+  hackathonProjects: HackathonProjectItem[];
   mediaItems: MediaItem[];
   people: PersonItem[];
   accomplishments: AccomplishmentItem[];
@@ -82,15 +78,12 @@ interface CmsContextValue {
   addHackathon: (hackathon: Omit<HackathonItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateHackathon: (id: string, updates: Partial<HackathonItem>) => Promise<void>;
   deleteHackathon: (id: string) => Promise<void>;
-  setHackathonStatus: (id: string, status: HackathonStatus) => Promise<void>;
-  registerForHackathon: (registration: Omit<HackathonRegistration, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<{ success: boolean; error?: string }>;
-  updateRegistrationStatus: (id: string, status: 'REGISTERED' | 'CONFIRMED' | 'CANCELLED') => Promise<void>;
 
-  // Mutations - Submissions
-  addSubmission: (submission: Omit<SubmissionItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateSubmission: (id: string, updates: Partial<SubmissionItem>) => Promise<void>;
-  deleteSubmission: (id: string) => Promise<void>;
-  setSubmissionPublished: (id: string, published: boolean) => Promise<void>;
+  // Mutations - Hackathon Projects
+  addHackathonProject: (project: Omit<HackathonProjectItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateHackathonProject: (id: string, updates: Partial<HackathonProjectItem>) => Promise<void>;
+  deleteHackathonProject: (id: string) => Promise<void>;
+  setHackathonProjectPublished: (id: string, published: boolean) => Promise<void>;
 
   // Mutations - Media
   addMedia: (media: Omit<MediaItem, 'id' | 'uploadedAt' | 'uploadedBy'>) => Promise<void>;
@@ -255,7 +248,6 @@ function mapDbEvent(row: any): EventItem {
     resources: row.resources || [],
     status: row.status || 'DRAFT',
     isUpcoming: Boolean(row.is_upcoming),
-    hasSubmissions: Boolean(row.has_submissions || row.category === 'HACKATHON' || row.id === 'game-building-hackathon-2026'),
     createdAt: row.created_at ? row.created_at.split('T')[0] : '',
     updatedAt: row.updated_at ? row.updated_at.split('T')[0] : '',
   };
@@ -290,19 +282,9 @@ function mapDbHackathon(row: any): HackathonItem {
     slug: row.slug || row.id,
     tagline: row.tagline || '',
     description: row.description || '',
+    date: row.date || '',
     coverImage: row.cover_image || undefined,
-    bannerImage: row.banner_image || undefined,
-    status: row.status || 'UPCOMING',
-    startDate: row.start_date || '',
-    endDate: row.end_date || '',
-    registrationDeadline: row.registration_deadline || undefined,
-    submissionDeadline: row.submission_deadline || undefined,
-    rules: row.rules || '',
-    theme: row.theme || '',
-    categories: row.categories || [],
-    organizer: row.organizer || 'DETOX Engineering Collective',
     location: row.location || undefined,
-    capacity: row.capacity || undefined,
     isPublished: row.is_published !== undefined ? Boolean(row.is_published) : true,
     createdAt: row.created_at ? row.created_at.split('T')[0] : '',
     updatedAt: row.updated_at ? row.updated_at.split('T')[0] : '',
@@ -316,96 +298,55 @@ function mapHackathonToDb(h: Partial<HackathonItem>): any {
   if (h.slug !== undefined) row.slug = h.slug;
   if (h.tagline !== undefined) row.tagline = h.tagline;
   if (h.description !== undefined) row.description = h.description;
+  if (h.date !== undefined) row.date = h.date;
   if (h.coverImage !== undefined) row.cover_image = h.coverImage;
-  if (h.bannerImage !== undefined) row.banner_image = h.bannerImage;
-  if (h.status !== undefined) row.status = h.status;
-  if (h.startDate !== undefined) row.start_date = h.startDate;
-  if (h.endDate !== undefined) row.end_date = h.endDate;
-  if (h.registrationDeadline !== undefined) row.registration_deadline = h.registrationDeadline;
-  if (h.submissionDeadline !== undefined) row.submission_deadline = h.submissionDeadline;
-  if (h.rules !== undefined) row.rules = h.rules;
-  if (h.theme !== undefined) row.theme = h.theme;
-  if (h.categories !== undefined) row.categories = h.categories;
-  if (h.organizer !== undefined) row.organizer = h.organizer;
   if (h.location !== undefined) row.location = h.location;
-  if (h.capacity !== undefined) row.capacity = h.capacity;
   if (h.isPublished !== undefined) row.is_published = h.isPublished;
   row.updated_at = new Date().toISOString();
   return row;
 }
 
-function mapDbRegistration(row: any): HackathonRegistration {
+function mapDbHackathonProject(row: any): HackathonProjectItem {
   return {
     id: row.id,
     hackathonId: row.hackathon_id,
-    userId: row.user_id || undefined,
-    fullName: row.full_name || '',
-    email: row.email || '',
-    discordHandle: row.discord_handle || undefined,
-    teamName: row.team_name || undefined,
-    skills: row.skills || [],
-    status: row.status || 'REGISTERED',
-    createdAt: row.created_at || '',
-    updatedAt: row.updated_at || '',
-  };
-}
-
-function mapRegistrationToDb(r: Partial<HackathonRegistration>): any {
-  const row: any = {};
-  if (r.id !== undefined) row.id = r.id;
-  if (r.hackathonId !== undefined) row.hackathon_id = r.hackathonId;
-  if (r.userId !== undefined) row.user_id = r.userId;
-  if (r.fullName !== undefined) row.full_name = r.fullName;
-  if (r.email !== undefined) row.email = r.email;
-  if (r.discordHandle !== undefined) row.discord_handle = r.discordHandle;
-  if (r.teamName !== undefined) row.team_name = r.teamName;
-  if (r.skills !== undefined) row.skills = r.skills;
-  if (r.status !== undefined) row.status = r.status;
-  row.updated_at = new Date().toISOString();
-  return row;
-}
-
-function mapDbSubmission(row: any): SubmissionItem {
-  return {
-    id: row.id,
-    eventId: row.event_id || undefined,
-    hackathonId: row.hackathon_id || row.event_id || undefined,
     title: row.title,
     slug: row.slug || row.id,
     description: row.description || '',
-    coverImage: row.cover_image || undefined,
     teamName: row.team_name || undefined,
-    participantNames: row.participant_names || [],
-    category: row.category || undefined,
-    techStack: row.tech_stack || [],
-    demoUrl: row.demo_url || undefined,
-    repositoryUrl: row.repository_url || undefined,
+    teamMembers: row.team_members || [],
+    coverImage: row.cover_image || undefined,
     screenshots: row.screenshots || [],
-    resultBadge: row.result_badge || undefined,
-    published: Boolean(row.published),
+    techStack: row.tech_stack || [],
+    repositoryUrl: row.repository_url || undefined,
+    demoUrl: row.demo_url || undefined,
+    placement: row.placement || undefined,
+    isWinner: Boolean(row.is_winner),
+    isFeatured: Boolean(row.is_featured),
+    published: row.published !== undefined ? Boolean(row.published) : true,
     createdAt: row.created_at ? row.created_at.split('T')[0] : '',
     updatedAt: row.updated_at ? row.updated_at.split('T')[0] : '',
   };
 }
 
-function mapSubmissionToDb(s: Partial<SubmissionItem>): any {
+function mapHackathonProjectToDb(p: Partial<HackathonProjectItem>): any {
   const row: any = {};
-  if (s.id !== undefined) row.id = s.id;
-  if (s.eventId !== undefined) row.event_id = s.eventId;
-  if (s.hackathonId !== undefined) row.hackathon_id = s.hackathonId;
-  if (s.title !== undefined) row.title = s.title;
-  if (s.slug !== undefined) row.slug = s.slug;
-  if (s.description !== undefined) row.description = s.description;
-  if (s.coverImage !== undefined) row.cover_image = s.coverImage;
-  if (s.teamName !== undefined) row.team_name = s.teamName;
-  if (s.participantNames !== undefined) row.participant_names = s.participantNames;
-  if (s.category !== undefined) row.category = s.category;
-  if (s.techStack !== undefined) row.tech_stack = s.techStack;
-  if (s.demoUrl !== undefined) row.demo_url = s.demoUrl;
-  if (s.repositoryUrl !== undefined) row.repository_url = s.repositoryUrl;
-  if (s.screenshots !== undefined) row.screenshots = s.screenshots;
-  if (s.resultBadge !== undefined) row.result_badge = s.resultBadge;
-  if (s.published !== undefined) row.published = s.published;
+  if (p.id !== undefined) row.id = p.id;
+  if (p.hackathonId !== undefined) row.hackathon_id = p.hackathonId;
+  if (p.title !== undefined) row.title = p.title;
+  if (p.slug !== undefined) row.slug = p.slug;
+  if (p.description !== undefined) row.description = p.description;
+  if (p.teamName !== undefined) row.team_name = p.teamName;
+  if (p.teamMembers !== undefined) row.team_members = p.teamMembers;
+  if (p.coverImage !== undefined) row.cover_image = p.coverImage;
+  if (p.screenshots !== undefined) row.screenshots = p.screenshots;
+  if (p.techStack !== undefined) row.tech_stack = p.techStack;
+  if (p.repositoryUrl !== undefined) row.repository_url = p.repositoryUrl;
+  if (p.demoUrl !== undefined) row.demo_url = p.demoUrl;
+  if (p.placement !== undefined) row.placement = p.placement;
+  if (p.isWinner !== undefined) row.is_winner = p.isWinner;
+  if (p.isFeatured !== undefined) row.is_featured = p.isFeatured;
+  if (p.published !== undefined) row.published = p.published;
   row.updated_at = new Date().toISOString();
   return row;
 }
@@ -441,8 +382,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [projects, setProjects] = useState<ProjectItem[]>(isSupabaseConfigured ? [] : DEFAULT_PROJECTS);
   const [events, setEvents] = useState<EventItem[]>(isSupabaseConfigured ? [] : DEFAULT_EVENTS);
   const [hackathons, setHackathons] = useState<HackathonItem[]>(DEFAULT_HACKATHONS);
-  const [hackathonRegistrations, setHackathonRegistrations] = useState<HackathonRegistration[]>(DEFAULT_HACKATHON_REGISTRATIONS);
-  const [submissions, setSubmissions] = useState<SubmissionItem[]>(DEFAULT_SUBMISSIONS);
+  const [hackathonProjects, setHackathonProjects] = useState<HackathonProjectItem[]>(DEFAULT_HACKATHON_PROJECTS);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(isSupabaseConfigured ? [] : DEFAULT_MEDIA);
   const [people, setPeople] = useState<PersonItem[]>(isSupabaseConfigured ? [] : DEFAULT_PEOPLE);
   const [accomplishments, setAccomplishments] = useState<AccomplishmentItem[]>(isSupabaseConfigured ? [] : DEFAULT_ACCOMPLISHMENTS);
@@ -487,8 +427,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         projRes,
         evtRes,
         hackRes,
-        regRes,
-        subRes,
+        hackProjRes,
         peopleRes,
         mediaRes,
         accRes,
@@ -498,9 +437,8 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ] = await Promise.all([
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.from('events').select('*').order('date', { ascending: true }),
-        supabase.from('hackathons').select('*').order('start_date', { ascending: false }),
-        supabase.from('hackathon_registrations').select('*').order('created_at', { ascending: false }),
-        supabase.from('submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('hackathons').select('*').order('created_at', { ascending: false }),
+        supabase.from('hackathon_projects').select('*').order('created_at', { ascending: false }),
         supabase.from('people').select('*').order('display_order', { ascending: true }),
         supabase.from('media').select('*').order('created_at', { ascending: false }),
         supabase.from('accomplishments').select('*').order('date', { ascending: false }),
@@ -521,22 +459,16 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setEvents(DEFAULT_EVENTS);
       }
 
-      if (hackRes.data && !hackRes.error && hackRes.data.length > 0) {
+      if (hackRes.data && !hackRes.error) {
         setHackathons(hackRes.data.map(mapDbHackathon));
       } else {
         setHackathons(DEFAULT_HACKATHONS);
       }
 
-      if (regRes.data && !regRes.error && regRes.data.length > 0) {
-        setHackathonRegistrations(regRes.data.map(mapDbRegistration));
+      if (hackProjRes.data && !hackProjRes.error) {
+        setHackathonProjects(hackProjRes.data.map(mapDbHackathonProject));
       } else {
-        setHackathonRegistrations(DEFAULT_HACKATHON_REGISTRATIONS);
-      }
-
-      if (subRes.data && !subRes.error && subRes.data.length > 0) {
-        setSubmissions(subRes.data.map(mapDbSubmission));
-      } else if (subRes.error || !subRes.data || subRes.data.length === 0) {
-        setSubmissions(DEFAULT_SUBMISSIONS);
+        setHackathonProjects(DEFAULT_HACKATHON_PROJECTS);
       }
       if (peopleRes.data && !peopleRes.error) {
         setPeople(peopleRes.data.map(mapDbPerson));
@@ -873,119 +805,72 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [hackathons, logAudit]
   );
 
-  const setHackathonStatus = useCallback(
-    async (id: string, status: HackathonStatus) => {
-      await updateHackathon(id, { status });
-    },
-    [updateHackathon]
-  );
-
-  const registerForHackathon = useCallback(
-    async (
-      reg: Omit<HackathonRegistration, 'id' | 'createdAt' | 'updatedAt' | 'status'>
-    ): Promise<{ success: boolean; error?: string }> => {
-      const id = `reg-${Date.now()}`;
+  // Mutations: Hackathon Projects
+  const addHackathonProject = useCallback(
+    async (item: Omit<HackathonProjectItem, 'id' | 'createdAt' | 'updatedAt'>) => {
       const now = new Date().toISOString();
-      const newReg: HackathonRegistration = {
-        ...reg,
-        id,
-        status: 'CONFIRMED',
-        createdAt: now,
-        updatedAt: now,
-      };
+      const id = `${item.hackathonId}-${item.slug || Date.now()}`;
+      const newProject: HackathonProjectItem = { ...item, id, createdAt: now, updatedAt: now };
 
-      setHackathonRegistrations((prev) => [newReg, ...prev]);
+      setHackathonProjects((prev) => [newProject, ...prev]);
 
       if (isSupabaseConfigured) {
         try {
-          const { error } = await supabase.from('hackathon_registrations').insert(mapRegistrationToDb(newReg));
-          if (error) {
-            console.error('Supabase error creating registration:', error);
-            if (error.code === '23505') {
-              return { success: false, error: 'You are already registered for this hackathon with this email.' };
-            }
-          }
-        } catch (e: any) {
-          console.error('Error creating registration:', e);
-        }
-      }
-
-      await logAudit('CREATE', 'REGISTRATION', id, `Registered ${reg.fullName} (${reg.email}) for hackathon "${reg.hackathonId}"`);
-      return { success: true };
-    },
-    [logAudit]
-  );
-
-  const updateRegistrationStatus = useCallback(
-    async (id: string, status: 'REGISTERED' | 'CONFIRMED' | 'CANCELLED') => {
-      const now = new Date().toISOString();
-      setHackathonRegistrations((prev) => prev.map((r) => (r.id === id ? { ...r, status, updatedAt: now } : r)));
-
-      if (isSupabaseConfigured) {
-        try {
-          await supabase.from('hackathon_registrations').update({ status, updated_at: now }).eq('id', id);
+          const { error } = await supabase.from('hackathon_projects').insert(mapHackathonProjectToDb(newProject));
+          if (error) console.error('Supabase error inserting hackathon project:', error);
         } catch (e) {
-          console.error('Error updating registration status:', e);
+          console.error('Error inserting hackathon project:', e);
         }
       }
-    },
-    []
-  );
 
-  // Mutations: Submissions
-  const addSubmission = useCallback(
-    async (item: Omit<SubmissionItem, 'id' | 'createdAt' | 'updatedAt'>) => {
-      const now = new Date().toISOString().split('T')[0];
-      const id = item.slug || `sub-${Date.now()}`;
-      const newSubmission: SubmissionItem = { ...item, id, createdAt: now, updatedAt: now };
-
-      setSubmissions((prev) => [newSubmission, ...prev]);
-
-      if (isSupabaseConfigured) {
-        const { error } = await supabase.from('submissions').insert(mapSubmissionToDb(newSubmission));
-        if (error) console.error('Supabase error inserting submission:', error);
-      }
-
-      await logAudit('CREATE', 'SUBMISSION', id, `Added submission "${item.title}"`);
+      await logAudit('CREATE', 'HACKATHON_PROJECT', id, `Added hackathon project "${item.title}"`);
     },
     [logAudit]
   );
 
-  const updateSubmission = useCallback(
-    async (id: string, updates: Partial<SubmissionItem>) => {
-      const now = new Date().toISOString().split('T')[0];
-      setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates, updatedAt: now } : s)));
+  const updateHackathonProject = useCallback(
+    async (id: string, updates: Partial<HackathonProjectItem>) => {
+      const now = new Date().toISOString();
+      setHackathonProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates, updatedAt: now } : p)));
 
       if (isSupabaseConfigured) {
-        const { error } = await supabase.from('submissions').update(mapSubmissionToDb(updates)).eq('id', id);
-        if (error) console.error('Supabase error updating submission:', error);
+        try {
+          const { error } = await supabase.from('hackathon_projects').update(mapHackathonProjectToDb(updates)).eq('id', id);
+          if (error) console.error('Supabase error updating hackathon project:', error);
+        } catch (e) {
+          console.error('Error updating hackathon project:', e);
+        }
       }
 
-      await logAudit('UPDATE', 'SUBMISSION', id, `Updated submission "${id}"`);
+      await logAudit('UPDATE', 'HACKATHON_PROJECT', id, `Updated hackathon project "${id}"`);
     },
     [logAudit]
   );
 
-  const deleteSubmission = useCallback(
+  const deleteHackathonProject = useCallback(
     async (id: string) => {
-      const target = submissions.find((s) => s.id === id);
-      setSubmissions((prev) => prev.filter((s) => s.id !== id));
+      const target = hackathonProjects.find((p) => p.id === id);
+      setHackathonProjects((prev) => prev.filter((p) => p.id !== id));
 
       if (isSupabaseConfigured) {
-        const { error } = await supabase.from('submissions').delete().eq('id', id);
-        if (error) console.error('Supabase error deleting submission:', error);
+        try {
+          const { error } = await supabase.from('hackathon_projects').delete().eq('id', id);
+          if (error) console.error('Supabase error deleting hackathon project:', error);
+        } catch (e) {
+          console.error('Error deleting hackathon project:', e);
+        }
       }
 
-      await logAudit('DELETE', 'SUBMISSION', id, `Deleted submission "${target?.title || id}"`);
+      await logAudit('DELETE', 'HACKATHON_PROJECT', id, `Deleted hackathon project "${target?.title || id}"`);
     },
-    [submissions, logAudit]
+    [hackathonProjects, logAudit]
   );
 
-  const setSubmissionPublished = useCallback(
+  const setHackathonProjectPublished = useCallback(
     async (id: string, published: boolean) => {
-      await updateSubmission(id, { published });
+      await updateHackathonProject(id, { published });
     },
-    [updateSubmission]
+    [updateHackathonProject]
   );
 
   // Mutations: People
@@ -1388,8 +1273,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProjects(DEFAULT_PROJECTS);
     setEvents(DEFAULT_EVENTS);
     setHackathons(DEFAULT_HACKATHONS);
-    setHackathonRegistrations(DEFAULT_HACKATHON_REGISTRATIONS);
-    setSubmissions(DEFAULT_SUBMISSIONS);
+    setHackathonProjects(DEFAULT_HACKATHON_PROJECTS);
     setMediaItems(DEFAULT_MEDIA);
     setPeople(DEFAULT_PEOPLE);
     setAccomplishments(DEFAULT_ACCOMPLISHMENTS);
@@ -1406,8 +1290,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         projects,
         events,
         hackathons,
-        hackathonRegistrations,
-        submissions,
+        hackathonProjects,
         mediaItems,
         people,
         accomplishments,
@@ -1433,13 +1316,10 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addHackathon,
         updateHackathon,
         deleteHackathon,
-        setHackathonStatus,
-        registerForHackathon,
-        updateRegistrationStatus,
-        addSubmission,
-        updateSubmission,
-        deleteSubmission,
-        setSubmissionPublished,
+        addHackathonProject,
+        updateHackathonProject,
+        deleteHackathonProject,
+        setHackathonProjectPublished,
         addMedia,
         deleteMedia,
         addPerson,

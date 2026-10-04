@@ -15,10 +15,10 @@ import { MindsBehindDetoxPage } from './pages/MindsBehindDetoxPage';
 import { PersonProfilePage } from './pages/PersonProfilePage';
 import { MembersPortal } from './pages/MembersPortal';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { SubmissionsGalleryPage } from './pages/SubmissionsGalleryPage';
-import { SubmissionDetailPage } from './pages/SubmissionDetailPage';
 import { HackathonsDirectoryPage } from './pages/HackathonsDirectoryPage';
 import { HackathonDetailPage } from './pages/HackathonDetailPage';
+import { HackathonProjectsPage } from './pages/HackathonProjectsPage';
+import { HackathonProjectDetailPage } from './pages/HackathonProjectDetailPage';
 import { ArtifactModal } from './components/ArtifactModal';
 
 function AppContent() {
@@ -37,36 +37,23 @@ function AppContent() {
       return <PersonProfilePage />;
     }
 
-    // Dynamic Hackathons routing:
-    // /hackathons/:hackathonId/submissions/:submissionId
-    // /hackathons/:hackathonId/submissions
-    // /hackathons/:hackathonId
+    // Clean Hackathons routing:
+    // /hackathons/:hackathonSlug/projects/:projectSlug
+    // /hackathons/:hackathonSlug/projects
+    // /hackathons/:hackathonSlug
     // /hackathons
     if (path.startsWith('/hackathons')) {
       const parts = path.split('/').filter(Boolean);
-      if (parts.length >= 4 && parts[2] === 'submissions') {
-        return <SubmissionDetailPage hackathonId={parts[1]} submissionId={parts[3]} />;
+      if (parts.length >= 4 && parts[2] === 'projects') {
+        return <HackathonProjectDetailPage hackathonSlug={parts[1]} projectSlug={parts[3]} />;
       }
-      if (parts.length >= 3 && parts[2] === 'submissions') {
-        return <SubmissionsGalleryPage hackathonId={parts[1]} />;
+      if (parts.length >= 3 && parts[2] === 'projects') {
+        return <HackathonProjectsPage hackathonSlug={parts[1]} />;
       }
       if (parts.length >= 2) {
-        return <HackathonDetailPage hackathonId={parts[1]} />;
+        return <HackathonDetailPage hackathonSlug={parts[1]} />;
       }
       return <HackathonsDirectoryPage />;
-    }
-
-    // Dynamic Hackathon / Event Submissions routing:
-    // /events/:eventId/submissions/:submissionId
-    // /events/:eventId/submissions
-    if (path.startsWith('/events/')) {
-      const parts = path.split('/').filter(Boolean);
-      if (parts.length >= 4 && parts[2] === 'submissions') {
-        return <SubmissionDetailPage eventId={parts[1]} submissionId={parts[3]} />;
-      }
-      if (parts.length >= 3 && parts[2] === 'submissions') {
-        return <SubmissionsGalleryPage eventId={parts[1]} />;
-      }
     }
 
     switch (path) {
