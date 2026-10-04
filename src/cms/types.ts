@@ -47,9 +47,52 @@ export interface EventItem {
   updatedAt: string;
 }
 
+export type HackathonStatus = 'UPCOMING' | 'ONGOING' | 'PREVIOUS' | 'ARCHIVED';
+
+export interface HackathonItem {
+  id: string;
+  title: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  coverImage?: string;
+  bannerImage?: string;
+  status: HackathonStatus;
+  startDate: string;
+  endDate: string;
+  registrationDeadline?: string;
+  submissionDeadline?: string;
+  rules?: string;
+  theme?: string;
+  categories: string[];
+  organizer: string;
+  location?: string;
+  capacity?: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RegistrationStatus = 'REGISTERED' | 'CONFIRMED' | 'CANCELLED';
+
+export interface HackathonRegistration {
+  id: string;
+  hackathonId: string;
+  userId?: string;
+  fullName: string;
+  email: string;
+  discordHandle?: string;
+  teamName?: string;
+  skills: string[];
+  status: RegistrationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SubmissionItem {
   id: string;
-  eventId: string;
+  eventId?: string;
+  hackathonId?: string;
   title: string;
   slug?: string;
   description: string;
@@ -245,9 +288,11 @@ export type AuditTargetType =
   | 'MEMBER' 
   | 'PERSON' 
   | 'SETTING' 
-  | 'ACCOMPLISHMENT'
-  | 'ANNOUNCEMENT'
-  | 'SUBMISSION';
+  | 'ACCOMPLISHMENT' 
+  | 'ANNOUNCEMENT' 
+  | 'SUBMISSION'
+  | 'HACKATHON'
+  | 'REGISTRATION';
 
 export interface AuditLogEntry {
   id: string;

@@ -651,12 +651,157 @@ ON CONFLICT (id) DO UPDATE SET
     active = EXCLUDED.active,
     status = EXCLUDED.status;
 
--- 7. SUBMISSIONS (Sample Dev Seed)
+-- 7. HACKATHONS
+INSERT INTO public.hackathons (
+    id, title, slug, tagline, description, cover_image, banner_image, status, start_date, end_date, registration_deadline, submission_deadline, rules, theme, categories, organizer, location, capacity, is_published
+) VALUES
+(
+    'game-building-hackathon-2026',
+    'DETOX Game Building Hackathon 2026',
+    'game-building-hackathon-2026',
+    'Build. Play. Ship.',
+    'A 48-hour student game development marathon focused on bespoke graphics engines, raymarched shaders, fixed-point deterministic physics, and mechanical arcade controls.',
+    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80',
+    'ONGOING',
+    '2026-10-01T09:00:00Z',
+    '2026-10-07T21:00:00Z',
+    '2026-10-05T23:59:00Z',
+    '2026-10-07T20:00:00Z',
+    '1. All source code must be written during the sprint or clearly attributed.
+2. No commercial closed engines — custom C/C++, Rust, WebGPU, or lightweight open-source frameworks only.
+3. Games must be playable in-browser or provide verified binaries.',
+    'Zero Bloat: Custom Engines, Deterministic Physics & Arcade Action',
+    ARRAY['Physics Simulation', 'Arcade / Action', 'Graphics & Engine', 'Roguelike / Retro', 'Experimental / Audio'],
+    'DETOX Engineering Collective',
+    'DETOX Hardware Lab & Online Discord',
+    '64 Builders / 18 Teams',
+    true
+),
+(
+    'kernel-security-jam-2026',
+    'Kernel Security Jam & Exploitation Sprint',
+    'kernel-security-jam-2026',
+    'Break. Isolate. Harden.',
+    'A competitive low-level systems vulnerability exploration sprint. Reverse engineer synthetic kernel modules, exploit race conditions, and craft verifiable mitigation patches.',
+    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1600&q=80',
+    'UPCOMING',
+    '2026-11-12T10:00:00Z',
+    '2026-11-15T18:00:00Z',
+    '2026-11-10T23:59:00Z',
+    '2026-11-15T16:00:00Z',
+    '1. Ethical disclosure only — attacks confined strictly to the designated lab hypervisor ring.
+2. Solutions must include full vulnerability PoC and upstream C patch.',
+    'Ring-0 Hardening: Side-Channels, Race Conditions & Zero-Allocation Packet Filters',
+    ARRAY['Kernel Exploit', 'Hardware Side-Channel', 'Microkernel IPC', 'Memory Safety'],
+    'DETOX Security Lab',
+    'Systems Lab Bench 3 & Private WireGuard VPN',
+    '32 Researchers',
+    true
+),
+(
+    'ai-hardware-sprint-2025',
+    'AI Edge Silicon & Hardware Accelerator Sprint 2025',
+    'ai-hardware-sprint-2025',
+    'Tiled GEMM on FPGA.',
+    'A 72-hour hardware acceleration hackathon where undergraduate teams implemented quantized matrix-multiplication systolic arrays on Xilinx Artix-7 and custom KiCad coprocessor carrier cards.',
+    'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1600&q=80',
+    'PREVIOUS',
+    '2025-11-14T09:00:00Z',
+    '2025-11-17T20:00:00Z',
+    '2025-11-10T23:59:00Z',
+    '2025-11-17T18:00:00Z',
+    '1. Custom Verilog / VHDL or Chisel pipelines.
+2. Verified on oscilloscope and logic analyzer test benches.',
+    'Quantized GEMM & Systolic Computing on Resource-Constrained FPGAs',
+    ARRAY['FPGA Architecture', 'Custom PCB', 'Fixed-Point DSP', 'Embedded Linux'],
+    'DETOX Hardware Division',
+    'DETOX Hardware Lab',
+    '12 Teams Deployed',
+    true
+)
+ON CONFLICT (id) DO UPDATE SET
+    title = EXCLUDED.title,
+    slug = EXCLUDED.slug,
+    tagline = EXCLUDED.tagline,
+    description = EXCLUDED.description,
+    cover_image = EXCLUDED.cover_image,
+    banner_image = EXCLUDED.banner_image,
+    status = EXCLUDED.status,
+    start_date = EXCLUDED.start_date,
+    end_date = EXCLUDED.end_date,
+    registration_deadline = EXCLUDED.registration_deadline,
+    submission_deadline = EXCLUDED.submission_deadline,
+    rules = EXCLUDED.rules,
+    theme = EXCLUDED.theme,
+    categories = EXCLUDED.categories,
+    organizer = EXCLUDED.organizer,
+    location = EXCLUDED.location,
+    capacity = EXCLUDED.capacity,
+    is_published = EXCLUDED.is_published;
+
+-- 8. HACKATHON REGISTRATIONS
+INSERT INTO public.hackathon_registrations (
+    id, hackathon_id, full_name, email, discord_handle, team_name, skills, status
+) VALUES
+(
+    'reg-01',
+    'game-building-hackathon-2026',
+    'Dev P.',
+    'dev@detox.build',
+    'dev#0001',
+    'Team Kepler-42',
+    ARRAY['Rust', 'Bevy', 'GLSL', 'Physics Engines'],
+    'CONFIRMED'
+),
+(
+    'reg-02',
+    'game-building-hackathon-2026',
+    'Aditya N.',
+    'aditya@detox.build',
+    'aditya#1234',
+    'Team Kepler-42',
+    ARRAY['WebGPU', 'C++', 'Linear Algebra'],
+    'CONFIRMED'
+),
+(
+    'reg-03',
+    'game-building-hackathon-2026',
+    'Vikram S.',
+    'vikram@detox.build',
+    'vikram#9999',
+    'Kernel Killers',
+    ARRAY['C', 'Assembly', 'x86_64'],
+    'CONFIRMED'
+),
+(
+    'reg-04',
+    'kernel-security-jam-2026',
+    'Dev P.',
+    'dev@detox.build',
+    'dev#0001',
+    'Solo',
+    ARRAY['Rust', 'eBPF', 'Kernel Hardening'],
+    'REGISTERED'
+)
+ON CONFLICT (id) DO UPDATE SET
+    hackathon_id = EXCLUDED.hackathon_id,
+    full_name = EXCLUDED.full_name,
+    email = EXCLUDED.email,
+    discord_handle = EXCLUDED.discord_handle,
+    team_name = EXCLUDED.team_name,
+    skills = EXCLUDED.skills,
+    status = EXCLUDED.status;
+
+-- 9. SUBMISSIONS
 INSERT INTO public.submissions (
-    id, event_id, title, slug, category, description, cover_image, team_name, participant_names, tech_stack, demo_url, repository_url, screenshots, result_badge, published
+    id, event_id, hackathon_id, title, slug, category, description, cover_image, team_name, participant_names, tech_stack, demo_url, repository_url, screenshots, result_badge, published
 ) VALUES
 (
     'sub-orbital-decay',
+    'game-building-hackathon-2026',
     'game-building-hackathon-2026',
     'Orbital Decay: N-Body Gravity Slingshot',
     'orbital-decay',
@@ -668,8 +813,104 @@ INSERT INTO public.submissions (
     ARRAY['Rust', 'Bevy', 'Wasm', 'WebGPU', 'Verlet Integration'],
     'https://orbital-decay.detox.build',
     'https://github.com/detox-build/orbital-decay',
-    ARRAY['https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80'],
+    ARRAY[
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1200&q=80'
+    ],
     '1st Place / Overall Winner',
     true
+),
+(
+    'sub-pixel-vector-arcade',
+    'game-building-hackathon-2026',
+    'game-building-hackathon-2026',
+    'Vector Drift 1984: Oscilloscope Racing',
+    'vector-drift-1984',
+    'Arcade / Action',
+    'A minimalist neon vector arcade racing simulator inspired by Vectrex beam displays. Built without commercial engines using a custom software rasterizer running directly inside HTML5 Canvas with simulated phosphor persistence decay.',
+    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+    'Phosphor Labs',
+    ARRAY['Sneha T.', 'Tanya L.'],
+    ARRAY['TypeScript', 'Canvas2D', 'Web Audio API', 'Custom Rasterizer'],
+    'https://vectordrift.detox.build',
+    'https://github.com/detox-build/vector-drift',
+    ARRAY[
+        'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80'
+    ],
+    '2nd Place / Best Aesthetics',
+    true
+),
+(
+    'sub-vox-automata',
+    'game-building-hackathon-2026',
+    'game-building-hackathon-2026',
+    'VoxAutomata: Cellular Sand Physics Engine',
+    'vox-automata',
+    'Graphics & Engine',
+    'A falling-sand simulation game engine executing on compute shaders. Features over 500,000 simultaneous interactive powder, liquid, and gas particles reacting to thermodynamic gradients, chemical reactions, and physical containment destruction.',
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+    'Compute Brigade',
+    ARRAY['Rohan K.'],
+    ARRAY['WebGPU', 'WGSL Shaders', 'Vite', 'TypeScript'],
+    'https://voxautomata.detox.build',
+    'https://github.com/detox-build/vox-automata',
+    ARRAY[
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80'
+    ],
+    '3rd Place / Technical Excellence',
+    true
+),
+(
+    'sub-chronomancer-dungeon',
+    'game-building-hackathon-2026',
+    'game-building-hackathon-2026',
+    'Chronomancer: Deterministic Time Loop Roguelike',
+    'chronomancer-dungeon',
+    'Roguelike / Retro',
+    'A grid-based tactical dungeon crawler where each step records player actions into a deterministic time ring-buffer. Players solve combat puzzles by teaming up with chronological ghost iterations of their previous actions.',
+    'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80',
+    'Clockwork Collective',
+    ARRAY['Arjun M.', 'Vikram S.'],
+    ARRAY['C11', 'SDL2', 'Emscripten', 'WebAssembly'],
+    'https://chronomancer.detox.build',
+    'https://github.com/detox-build/chronomancer',
+    ARRAY[
+        'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80'
+    ],
+    NULL,
+    true
+),
+(
+    'sub-echoes-in-wire',
+    'game-building-hackathon-2026',
+    'game-building-hackathon-2026',
+    'Echoes in the Wire: Audio-Only Spatial Sonar',
+    'echoes-in-wire',
+    'Experimental / Audio',
+    'An exploration adventure designed to be played with eyes closed. Navigated entirely through spatial 3D HRTF audio convolutions and sonic impulse reflections echoing through pitch-black subterranean conduits.',
+    'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=1200&q=80',
+    NULL,
+    ARRAY['Nikhil G.'],
+    ARRAY['WebAudio API', 'Binaural HRTF', 'React 19'],
+    'https://echoes.detox.build',
+    NULL,
+    ARRAY[],
+    NULL,
+    true
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    event_id = EXCLUDED.event_id,
+    hackathon_id = EXCLUDED.hackathon_id,
+    title = EXCLUDED.title,
+    slug = EXCLUDED.slug,
+    category = EXCLUDED.category,
+    description = EXCLUDED.description,
+    cover_image = EXCLUDED.cover_image,
+    team_name = EXCLUDED.team_name,
+    participant_names = EXCLUDED.participant_names,
+    tech_stack = EXCLUDED.tech_stack,
+    demo_url = EXCLUDED.demo_url,
+    repository_url = EXCLUDED.repository_url,
+    screenshots = EXCLUDED.screenshots,
+    result_badge = EXCLUDED.result_badge,
+    published = EXCLUDED.published;

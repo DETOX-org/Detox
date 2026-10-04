@@ -16,33 +16,61 @@ import {
 } from 'lucide-react';
 
 interface SubmissionsGalleryPageProps {
-  eventId: string;
+  eventId?: string;
+  hackathonId?: string;
 }
 
-export const SubmissionsGalleryPage: React.FC<SubmissionsGalleryPageProps> = ({ eventId }) => {
+export const SubmissionsGalleryPage: React.FC<SubmissionsGalleryPageProps> = ({ eventId, hackathonId }) => {
   const { mode } = useTheme();
   const isLight = mode === 'light';
-  const { navigate, searchParams } = useRouter();
-  const { events, submissions, isLoadingData } = useCms();
+  const { navigate, path } = useRouter();
+  const { events, hackathons, submissions, isLoadingData } = useCms();
 
-  // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  
-  // Tab state: 'ALL' vs 'WINNERS' vs 'OVERVIEW'
-  const initialTab = searchParams.get('tab') === 'results' ? 'WINNERS' : 'ALL';
-  const [activeTab, setActiveTab] = useState<'ALL' | 'WINNERS'>(initialTab);
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'WINNERS'>('ALL');
 
-  // Find corresponding event
+  const isHackathonRoute = Boolean(hackathonId) || path.startsWith('/hackathons');
+  const targetId = hackathonId || eventId || 'game-building-hackathon-2026';
+
+  // Find corresponding hackathon or event
+  const hackathon = useMemo(() => {
+    return hackathons.find(
+      (h) =>
+        h.id.toLowerCase() === targetId.toLowerCase() ||
+        h.slug.toLowerCase() === targetId.toLowerCase()
+    );
+  }, [hackathons, targetId]);
+
   const event = useMemo(() => {
+    if (hackathon) {
+      return {
+        id: hackathon.id,
+        code: 'DTX-HACK',
+        title: hackathon.title,
+        category: 'HACKATHON' as const,
+        date: hackathon.startDate,
+        time: 'Hybrid Sprint',
+        location: hackathon.location || 'DETOX Hardware Lab',
+        description: hackathon.description,
+        deliverables: ['Playable game/system build', 'Public Git repository'],
+        status: 'PUBLISHED' as const,
+        isUpcoming: false,
+        photoLabel: hackathon.title,
+        photoCaption: hackathon.tagline || 'Student build sprint.',
+        createdAt: hackathon.createdAt,
+        updatedAt: hackathon.updatedAt,
+      };
+    }
+
     return (
       events.find(
         (e) =>
-          e.id.toLowerCase() === eventId.toLowerCase() ||
-          e.code.toLowerCase() === eventId.toLowerCase() ||
-          e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').includes(eventId.toLowerCase())
+          e.id.toLowerCase() === targetId.toLowerCase() ||
+          e.code.toLowerCase() === targetId.toLowerCase() ||
+          e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').includes(targetId.toLowerCase())
       ) || {
-        id: eventId,
+        id: targetId,
         code: 'DTX-HACK',
         title: 'DETOX Game Building Hackathon 2026',
         category: 'HACKATHON' as const,
@@ -59,19 +87,21 @@ export const SubmissionsGalleryPage: React.FC<SubmissionsGalleryPageProps> = ({ 
         updatedAt: '2026-10-02',
       }
     );
-  }, [events, eventId]);
+  }, [events, hackathon, targetId]);
 
-  // Filter submissions for this event (only published submissions for public visitors)
+  // Filter submissions for this event/hackathon (only published submissions for public visitors)
   const eventSubmissions = useMemo(() => {
     return submissions.filter(
       (s) =>
         s.published &&
-        (s.eventId.toLowerCase() === eventId.toLowerCase() ||
-          s.eventId.toLowerCase() === event.id.toLowerCase() ||
-          eventId === 'game-building-hackathon-2026' ||
-          s.eventId === 'game-building-hackathon-2026')
+        (s.hackathonId?.toLowerCase() === targetId.toLowerCase() ||
+          s.eventId?.toLowerCase() === targetId.toLowerCase() ||
+          (hackathon && (s.hackathonId?.toLowerCase() === hackathon.id.toLowerCase() || s.hackathonId?.toLowerCase() === hackathon.slug.toLowerCase())) ||
+          (event && s.eventId?.toLowerCase() === event.id.toLowerCase()) ||
+          targetId === 'game-building-hackathon-2026' ||
+          s.hackathonId === 'game-building-hackathon-2026')
     );
-  }, [submissions, eventId, event.id]);
+  }, [submissions, targetId, hackathon, event]);
 
   // Extract unique categories for category pills
   const availableCategories = useMemo(() => {
@@ -137,11 +167,11 @@ export const SubmissionsGalleryPage: React.FC<SubmissionsGalleryPageProps> = ({ 
       {/* 1. Contextual Return Bar */}
       <div className="mb-6">
         <Link
-          to="/events"
+          to={isHackathonRoute ? (hackathon ? `/hackathons/${hackathon.slug || hackathon.id}` : '/hackathons') : '/events'}
           className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-[#235347] dark:hover:text-[#99CDD8] transition-colors py-1.5"
         >
           <ArrowLeft size={14} />
-          <span>Back to All Events & Sprints</span>
+          <span>{isHackathonRoute ? `Back to ${hackathon?.title || 'Hackathon'}` : 'Back to All Events & Sprints'}</span>
         </Link>
       </div>
 
@@ -354,7 +384,9 @@ export const SubmissionsGalleryPage: React.FC<SubmissionsGalleryPageProps> = ({ 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
           {filteredSubmissions.map((sub) => {
             const categoryTagVariant = getCategoryTagVariant(sub.category);
-            const detailUrl = `/events/${encodeURIComponent(event.id)}/submissions/${encodeURIComponent(sub.id)}`;
+            const detailUrl = isHackathonRoute
+              ? `/hackathons/${encodeURIComponent(hackathon?.slug || targetId)}/submissions/${encodeURIComponent(sub.slug || sub.id)}`
+              : `/events/${encodeURIComponent(event.id)}/submissions/${encodeURIComponent(sub.slug || sub.id)}`;
 
             return (
               <div

@@ -11,6 +11,8 @@ import type {
   AuditLogEntry,
   CollageStageSettings,
   SubmissionItem,
+  HackathonItem,
+  HackathonRegistration,
 } from './types';
 
 export const DEFAULT_ROLES: UserRole[] = [
@@ -799,6 +801,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-orbital-decay',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Orbital Decay: N-Body Gravity Slingshot',
     slug: 'orbital-decay',
     category: 'Physics Simulation',
@@ -823,6 +826,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-chrono-shift',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Chrono-Shift: Deterministic Rollback Platformer',
     slug: 'chrono-shift',
     category: 'Arcade / Action',
@@ -846,6 +850,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-voxelforge',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'VoxelForge: Raymarched Signed Distance Fields',
     slug: 'voxelforge',
     category: 'Graphics & Engine',
@@ -868,6 +873,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-silicon-dungeon',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Silicon Dungeon: Bare-Metal 6502 Bytecode Crawler',
     slug: 'silicon-dungeon',
     category: 'Roguelike / Retro',
@@ -890,6 +896,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-aetherial-drift',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Aetherial Drift: Hydrodynamic Wake Racing',
     slug: 'aetherial-drift',
     category: 'Arcade / Racing',
@@ -909,6 +916,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-sub-zero-protocol',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Sub-Zero Protocol: Packet Routing Circuit Puzzle',
     slug: 'sub-zero-protocol',
     category: 'Puzzle / Strategy',
@@ -927,6 +935,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-kinetics',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Kinetics: Rigid Body Domino Cascade Laboratory',
     slug: 'kinetics',
     category: 'Physics Simulation',
@@ -944,6 +953,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-echoes-in-wire',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Echoes in the Wire: Audio-Only Spatial Sonar',
     slug: 'echoes-in-wire',
     category: 'Experimental / Audio',
@@ -960,6 +970,7 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   {
     id: 'sub-draft-prototype',
     eventId: 'game-building-hackathon-2026',
+    hackathonId: 'game-building-hackathon-2026',
     title: 'Unfinished Mesh Collider Sandbox (Internal Draft)',
     slug: 'draft-prototype',
     category: 'Experimental',
@@ -968,5 +979,134 @@ export const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
     published: false, // Testing that unpublished submissions are filtered out for public visitors!
     createdAt: '2026-10-26T10:00:00Z',
     updatedAt: '2026-10-26T10:00:00Z',
+  },
+];
+
+export const DEFAULT_HACKATHONS: HackathonItem[] = [
+  {
+    id: 'game-building-hackathon-2026',
+    title: 'GAME BUILDING HACKATHON 2026',
+    slug: 'game-building-hackathon-2026',
+    tagline: 'Build. Play. Ship.',
+    description:
+      'A 48-hour student game development marathon focused on bespoke graphics engines, raymarched shaders, fixed-point deterministic physics, and mechanical arcade controls. Open to all student builders.',
+    coverImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+    bannerImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80',
+    status: 'ONGOING',
+    startDate: '2026-10-01T09:00:00Z',
+    endDate: '2026-10-07T21:00:00Z',
+    registrationDeadline: '2026-10-05T23:59:00Z',
+    submissionDeadline: '2026-10-07T20:00:00Z',
+    rules:
+      '1. All source code must be written during the sprint or clearly attributed in your README.\n2. No commercial closed engines (Unity/Unreal) — custom C/C++, Rust, WebGPU, or lightweight open-source frameworks only.\n3. Games must be playable in-browser (Wasm/WebGL/WebGPU) or provide verified Linux/macOS/Windows binaries.\n4. Teams can consist of 1 to 4 student builders.\n5. Post-mortem write-up required with all submissions.',
+    theme: 'Zero Bloat: Custom Engines, Deterministic Physics & Arcade Action',
+    categories: ['Physics Simulation', 'Arcade / Action', 'Graphics & Engine', 'Roguelike / Retro', 'Experimental / Audio'],
+    organizer: 'DETOX Engineering Collective',
+    location: 'DETOX Hardware Lab & Online Discord',
+    capacity: '64 Builders / 18 Teams',
+    isPublished: true,
+    createdAt: '2026-09-01T00:00:00Z',
+    updatedAt: '2026-10-04T00:00:00Z',
+  },
+  {
+    id: 'kernel-security-jam-2026',
+    title: 'BARE-METAL KERNEL & SECURITY JAM 2026',
+    slug: 'kernel-security-jam-2026',
+    tagline: 'Ring-0 Exploit Defense & Microkernel IPC Sprints',
+    description:
+      'A 36-hour sprint auditing real microkernel IPC primitives, discovering side-channel timing leaks in cryptographic libraries, and wire-wrapping discrete hardware security tokens.',
+    coverImage: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+    bannerImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1600&q=80',
+    status: 'UPCOMING',
+    startDate: '2026-11-14T10:00:00Z',
+    endDate: '2026-11-16T18:00:00Z',
+    registrationDeadline: '2026-11-10T23:59:00Z',
+    submissionDeadline: '2026-11-16T17:00:00Z',
+    rules:
+      '1. Open to all student systems engineers.\n2. Audits must provide reproducible PoC exploits and remediation patches.\n3. Hardware tokens must use open Gerber designs.',
+    theme: 'Zero-Trust Hardware & Low-Latency IPC',
+    categories: ['Microkernels', 'Timing Attacks', 'Hardware Cryptography', 'Formal Verification'],
+    organizer: 'DETOX Systems Security Division',
+    location: 'DETOX Systems Lab & Virtual Matrix',
+    capacity: '32 Benches / 12 Teams',
+    isPublished: true,
+    createdAt: '2026-09-20T00:00:00Z',
+    updatedAt: '2026-10-01T00:00:00Z',
+  },
+  {
+    id: 'ai-hardware-sprint-2025',
+    title: 'EDGE AI & CUSTOM SILICON SPRINT 2025',
+    slug: 'ai-hardware-sprint-2025',
+    tagline: 'FPGA Acceleration & Quantized Inference',
+    description:
+      'Student teams synthesized custom systolic array matrix multipliers on Xilinx FPGAs and deployed 4-bit quantized vision transformers on battery-powered edge silicon.',
+    coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+    bannerImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80',
+    status: 'PREVIOUS',
+    startDate: '2025-11-08T09:00:00Z',
+    endDate: '2025-11-10T18:00:00Z',
+    registrationDeadline: '2025-11-05T23:59:00Z',
+    submissionDeadline: '2025-11-10T17:00:00Z',
+    rules:
+      '1. Submissions required RTL Verilog/VHDL code and logic analyzer traces.\n2. Benchmarked on energy consumption per inference token.',
+    theme: 'Sub-Watt Quantized Neural Silicon',
+    categories: ['FPGA', 'Quantized Inference', 'Embedded Vision', 'Verilog'],
+    organizer: 'DETOX Silicon Engineering',
+    location: 'Hardware Lab 2 — Benches A1-A6',
+    capacity: '24 Physical Benches',
+    isPublished: true,
+    createdAt: '2025-10-15T00:00:00Z',
+    updatedAt: '2025-11-11T00:00:00Z',
+  },
+];
+
+export const DEFAULT_HACKATHON_REGISTRATIONS: HackathonRegistration[] = [
+  {
+    id: 'reg-01',
+    hackathonId: 'game-building-hackathon-2026',
+    fullName: 'Dev P.',
+    email: 'dev.p@detox.build',
+    discordHandle: 'devp#1337',
+    teamName: 'Team Kepler-42',
+    skills: ['Rust', 'Bevy', 'Wasm', 'Physics Engines'],
+    status: 'CONFIRMED',
+    createdAt: '2026-10-02T11:20:00Z',
+    updatedAt: '2026-10-02T11:20:00Z',
+  },
+  {
+    id: 'reg-02',
+    hackathonId: 'game-building-hackathon-2026',
+    fullName: 'Sneha T.',
+    email: 'sneha.t@detox.build',
+    discordHandle: 'snehat#2048',
+    teamName: 'NullPointer Guild',
+    skills: ['C++20', 'Raylib', 'Fixed-Point Math'],
+    status: 'CONFIRMED',
+    createdAt: '2026-10-02T14:10:00Z',
+    updatedAt: '2026-10-02T14:10:00Z',
+  },
+  {
+    id: 'reg-03',
+    hackathonId: 'game-building-hackathon-2026',
+    fullName: 'Meera R.',
+    email: 'meera.r@detox.build',
+    discordHandle: 'meerar#9090',
+    teamName: 'ShaderCore',
+    skills: ['GLSL', 'WebGL 2.0', 'Fragment Shaders'],
+    status: 'CONFIRMED',
+    createdAt: '2026-10-03T09:40:00Z',
+    updatedAt: '2026-10-03T09:40:00Z',
+  },
+  {
+    id: 'reg-04',
+    hackathonId: 'kernel-security-jam-2026',
+    fullName: 'Arjun M.',
+    email: 'arjun.m@detox.build',
+    discordHandle: 'arjunm#4096',
+    teamName: 'ZeroPage Research',
+    skills: ['x86_64', 'GDB', 'Static Analysis', 'C11'],
+    status: 'REGISTERED',
+    createdAt: '2026-10-03T16:00:00Z',
+    updatedAt: '2026-10-03T16:00:00Z',
   },
 ];

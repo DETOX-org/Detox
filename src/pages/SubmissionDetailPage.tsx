@@ -24,31 +24,64 @@ const GitHubIcon: React.FC<{ size?: number; className?: string }> = ({ size = 14
 );
 
 interface SubmissionDetailPageProps {
-  eventId: string;
+  eventId?: string;
+  hackathonId?: string;
   submissionId: string;
 }
 
 export const SubmissionDetailPage: React.FC<SubmissionDetailPageProps> = ({
   eventId,
+  hackathonId,
   submissionId,
 }) => {
   const { mode } = useTheme();
   const isLight = mode === 'light';
-  const { navigate } = useRouter();
-  const { events, submissions, isLoadingData } = useCms();
+  const { navigate, path } = useRouter();
+  const { events, hackathons, submissions, isLoadingData } = useCms();
 
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
 
-  // Find corresponding event
+  const isHackathonRoute = Boolean(hackathonId) || path.startsWith('/hackathons');
+  const targetId = hackathonId || eventId || 'game-building-hackathon-2026';
+
+  // Find corresponding hackathon or event
+  const hackathon = useMemo(() => {
+    return hackathons.find(
+      (h) =>
+        h.id.toLowerCase() === targetId.toLowerCase() ||
+        h.slug.toLowerCase() === targetId.toLowerCase()
+    );
+  }, [hackathons, targetId]);
+
   const event = useMemo(() => {
+    if (hackathon) {
+      return {
+        id: hackathon.id,
+        code: 'DTX-HACK',
+        title: hackathon.title,
+        category: 'HACKATHON' as const,
+        date: hackathon.startDate,
+        time: 'Hybrid Sprint',
+        location: hackathon.location || 'DETOX Hardware Lab',
+        description: hackathon.description,
+        deliverables: ['Playable game/system build', 'Public Git repository'],
+        status: 'PUBLISHED' as const,
+        isUpcoming: false,
+        photoLabel: hackathon.title,
+        photoCaption: hackathon.tagline || 'Student build sprint.',
+        createdAt: hackathon.createdAt,
+        updatedAt: hackathon.updatedAt,
+      };
+    }
+
     return (
       events.find(
         (e) =>
-          e.id.toLowerCase() === eventId.toLowerCase() ||
-          e.code.toLowerCase() === eventId.toLowerCase() ||
-          e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').includes(eventId.toLowerCase())
+          e.id.toLowerCase() === targetId.toLowerCase() ||
+          e.code.toLowerCase() === targetId.toLowerCase() ||
+          e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').includes(targetId.toLowerCase())
       ) || {
-        id: eventId,
+        id: targetId,
         code: 'DTX-HACK',
         title: 'DETOX Game Building Hackathon 2026',
         category: 'HACKATHON' as const,
@@ -65,19 +98,21 @@ export const SubmissionDetailPage: React.FC<SubmissionDetailPageProps> = ({
         updatedAt: '2026-10-02',
       }
     );
-  }, [events, eventId]);
+  }, [events, hackathon, targetId]);
 
-  // All published submissions for this event
+  // All published submissions for this event or hackathon
   const eventSubmissions = useMemo(() => {
     return submissions.filter(
       (s) =>
         s.published &&
-        (s.eventId.toLowerCase() === eventId.toLowerCase() ||
-          s.eventId.toLowerCase() === event.id.toLowerCase() ||
-          eventId === 'game-building-hackathon-2026' ||
-          s.eventId === 'game-building-hackathon-2026')
+        (s.hackathonId?.toLowerCase() === targetId.toLowerCase() ||
+          s.eventId?.toLowerCase() === targetId.toLowerCase() ||
+          (hackathon && (s.hackathonId?.toLowerCase() === hackathon.id.toLowerCase() || s.hackathonId?.toLowerCase() === hackathon.slug.toLowerCase())) ||
+          (event && s.eventId?.toLowerCase() === event.id.toLowerCase()) ||
+          targetId === 'game-building-hackathon-2026' ||
+          s.hackathonId === 'game-building-hackathon-2026')
     );
-  }, [submissions, eventId, event.id]);
+  }, [submissions, targetId, hackathon, event]);
 
   // Current submission matching submissionId or slug
   const submissionIndex = useMemo(() => {
@@ -109,7 +144,9 @@ export const SubmissionDetailPage: React.FC<SubmissionDetailPageProps> = ({
     return 'sage';
   };
 
-  const galleryUrl = `/events/${encodeURIComponent(event.id)}/submissions`;
+  const galleryUrl = isHackathonRoute
+    ? `/hackathons/${encodeURIComponent(hackathon?.slug || targetId)}/submissions`
+    : `/events/${encodeURIComponent(event.id)}/submissions`;
 
   // Loading state
   if (isLoadingData && !submission) {
@@ -170,7 +207,11 @@ export const SubmissionDetailPage: React.FC<SubmissionDetailPageProps> = ({
           {prevSubmission && (
             <button
               onClick={() =>
-                navigate(`/events/${encodeURIComponent(event.id)}/submissions/${encodeURIComponent(prevSubmission.id)}`)
+                navigate(
+                  isHackathonRoute
+                    ? `/hackathons/${encodeURIComponent(hackathon?.slug || targetId)}/submissions/${encodeURIComponent(prevSubmission.slug || prevSubmission.id)}`
+                    : `/events/${encodeURIComponent(event.id)}/submissions/${encodeURIComponent(prevSubmission.slug || prevSubmission.id)}`
+                )
               }
               className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 ${
                 isLight
@@ -191,7 +232,11 @@ export const SubmissionDetailPage: React.FC<SubmissionDetailPageProps> = ({
           {nextSubmission && (
             <button
               onClick={() =>
-                navigate(`/events/${encodeURIComponent(event.id)}/submissions/${encodeURIComponent(nextSubmission.id)}`)
+                navigate(
+                  isHackathonRoute
+                    ? `/hackathons/${encodeURIComponent(hackathon?.slug || targetId)}/submissions/${encodeURIComponent(nextSubmission.slug || nextSubmission.id)}`
+                    : `/events/${encodeURIComponent(event.id)}/submissions/${encodeURIComponent(nextSubmission.slug || nextSubmission.id)}`
+                )
               }
               className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 ${
                 isLight

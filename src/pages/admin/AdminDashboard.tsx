@@ -12,6 +12,7 @@ import type {
 import { DETOX_PALETTE } from '../../design-system/primitives';
 import { ImageCutoutUploader } from '../../components/admin/ImageCutoutUploader';
 import { ArrangeCollageView } from '../../components/admin/ArrangeCollageView';
+import { AdminHackathonsSection } from '../../components/admin/AdminHackathonsSection';
 import { resolvePersonCutout } from '../../cms/imageUtils';
 import {
   LayoutDashboard,
@@ -39,7 +40,7 @@ import {
   Trophy,
 } from 'lucide-react';
 
-type AdminTab = 'OVERVIEW' | 'PEOPLE' | 'CONTENT' | 'MEDIA' | 'MEMBERS' | 'ACCESS' | 'SYSTEM';
+type AdminTab = 'OVERVIEW' | 'HACKATHONS' | 'PEOPLE' | 'CONTENT' | 'MEDIA' | 'MEMBERS' | 'ACCESS' | 'SYSTEM';
 type ContentSubTab = 'PROJECTS' | 'EVENTS' | 'SUBMISSIONS' | 'PEOPLE' | 'ACCOMPLISHMENTS' | 'ANNOUNCEMENTS';
 
 export const AdminDashboard: React.FC = () => {
@@ -743,6 +744,18 @@ export const AdminDashboard: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('HACKATHONS')}
+            className={`px-3.5 py-2 rounded-t-xs border-b-2 font-bold flex items-center gap-1.5 transition-colors ${
+              activeTab === 'HACKATHONS'
+                ? 'border-[#235347] text-[#235347] bg-zinc-200/50 dark:bg-zinc-800/40'
+                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
+            }`}
+          >
+            <Trophy size={13} />
+            <span>HACKATHONS</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('PEOPLE')}
             className={`px-3.5 py-2 rounded-t-xs border-b-2 font-bold flex items-center gap-1.5 transition-colors ${
               activeTab === 'PEOPLE'
@@ -892,6 +905,14 @@ export const AdminDashboard: React.FC = () => {
                 </button>
 
                 <button
+                  onClick={() => setActiveTab('HACKATHONS')}
+                  className="px-2.5 py-1.5 bg-[#235347] hover:bg-[#1a3f36] text-white rounded-xs font-semibold flex items-center gap-1"
+                >
+                  <Trophy size={12} />
+                  <span>Manage Hackathons</span>
+                </button>
+
+                <button
                   onClick={() => {
                     setActiveTab('CONTENT');
                     setContentSubTab('PROJECTS');
@@ -972,6 +993,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* TAB: HACKATHONS */}
+        {activeTab === 'HACKATHONS' && <AdminHackathonsSection />}
 
         {/* TAB 2: MINDS BEHIND DETOX (PEOPLE) */}
         {activeTab === 'PEOPLE' && renderPeopleManagementSection()}
@@ -1343,7 +1367,11 @@ export const AdminDashboard: React.FC = () => {
                             <td className="p-3 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 <Link
-                                  to={`/events/${encodeURIComponent(sub.eventId)}/submissions/${encodeURIComponent(sub.id)}`}
+                                  to={
+                                    sub.hackathonId
+                                      ? `/hackathons/${encodeURIComponent(sub.hackathonId)}/submissions/${encodeURIComponent(sub.id)}`
+                                      : `/events/${encodeURIComponent(sub.eventId || '')}/submissions/${encodeURIComponent(sub.id)}`
+                                  }
                                   className="p-1 rounded-md hover:bg-zinc-500/10 text-[#235347] dark:text-[#99CDD8]"
                                   title="View on public website"
                                 >

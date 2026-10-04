@@ -17,6 +17,8 @@ import { MembersPortal } from './pages/MembersPortal';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { SubmissionsGalleryPage } from './pages/SubmissionsGalleryPage';
 import { SubmissionDetailPage } from './pages/SubmissionDetailPage';
+import { HackathonsDirectoryPage } from './pages/HackathonsDirectoryPage';
+import { HackathonDetailPage } from './pages/HackathonDetailPage';
 import { ArtifactModal } from './components/ArtifactModal';
 
 function AppContent() {
@@ -33,6 +35,25 @@ function AppContent() {
   const renderActivePage = () => {
     if (path.startsWith('/people/')) {
       return <PersonProfilePage />;
+    }
+
+    // Dynamic Hackathons routing:
+    // /hackathons/:hackathonId/submissions/:submissionId
+    // /hackathons/:hackathonId/submissions
+    // /hackathons/:hackathonId
+    // /hackathons
+    if (path.startsWith('/hackathons')) {
+      const parts = path.split('/').filter(Boolean);
+      if (parts.length >= 4 && parts[2] === 'submissions') {
+        return <SubmissionDetailPage hackathonId={parts[1]} submissionId={parts[3]} />;
+      }
+      if (parts.length >= 3 && parts[2] === 'submissions') {
+        return <SubmissionsGalleryPage hackathonId={parts[1]} />;
+      }
+      if (parts.length >= 2) {
+        return <HackathonDetailPage hackathonId={parts[1]} />;
+      }
+      return <HackathonsDirectoryPage />;
     }
 
     // Dynamic Hackathon / Event Submissions routing:

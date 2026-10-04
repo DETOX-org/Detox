@@ -13,6 +13,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { name: 'About', path: '/about' },
   { name: 'Projects', path: '/projects' },
+  { name: 'Hackathons', path: '/hackathons' },
   { name: 'Community', path: '/community' },
   { name: 'Events', path: '/events' },
   { name: 'Minds Behind DETOX', path: '/minds' },
@@ -63,7 +64,7 @@ export const Navigation: React.FC = () => {
         {/* Desktop Navigation Links */}
         <nav className="hidden lg:flex items-center gap-1 font-sans text-xs font-medium">
           {navItems.map((item) => {
-            const isActive = path === item.path;
+            const isActive = path === item.path || (item.path !== '/' && path.startsWith(item.path));
             return (
               <Link
                 key={item.path}
@@ -256,18 +257,21 @@ export const Navigation: React.FC = () => {
             >
               Home
             </Link>
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3.5 py-2 rounded-xl font-medium ${
-                  path === item.path ? 'bg-[#235347] text-white font-bold' : 'hover:bg-zinc-500/10'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isItemActive = path === item.path || (item.path !== '/' && path.startsWith(item.path));
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block px-3.5 py-2 rounded-xl font-medium ${
+                    isItemActive ? 'bg-[#235347] text-white font-bold' : 'hover:bg-zinc-500/10'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
             <div className="pt-3 mt-2 border-t border-inherit flex gap-2">
               <Link
                 to="/members"

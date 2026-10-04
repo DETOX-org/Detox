@@ -4,6 +4,7 @@ export type RoutePath =
   | '/'
   | '/about'
   | '/projects'
+  | '/hackathons'
   | '/community'
   | '/events'
   | '/minds'
@@ -30,7 +31,7 @@ function normalizePath(pathname: string): string {
   const rawTarget = hash ? hash.split('?')[0] : pathname.split('?')[0];
   const target = rawTarget.startsWith('/') ? rawTarget : '/' + rawTarget;
 
-  if (target.startsWith('/people/') || target.startsWith('/events/')) {
+  if (target.startsWith('/people/') || target.startsWith('/events/') || target.startsWith('/hackathons')) {
     return target;
   }
 
@@ -39,6 +40,8 @@ function normalizePath(pathname: string): string {
       return '/about';
     case '/projects':
       return '/projects';
+    case '/hackathons':
+      return '/hackathons';
     case '/community':
       return '/community';
     case '/events':
